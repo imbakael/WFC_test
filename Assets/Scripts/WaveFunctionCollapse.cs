@@ -70,7 +70,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
     }
 
     private void PropagateConstraint(TileData curTile) {
-        Queue<TileData> queue = new Queue<TileData>();
+        var queue = new Queue<TileData>();
         queue.Enqueue(curTile);
         while (queue.Count != 0) {
             TileData tile = queue.Dequeue();
@@ -82,13 +82,16 @@ public class WaveFunctionCollapse : MonoBehaviour {
                     TileData neighbor = map[y, x];
                     int before = neighbor.ids.Count;
                     for (int j = neighbor.ids.Count - 1; j >= 0; j--) {
-                        if (!CompareTile(tile.ids[0], neighbor.ids[j], i)) {
+                        if (tile.ids.Any(t => CompareTile(t, neighbor.ids[j], i))) {
+                            continue;
+                        } else {
                             neighbor.ids.RemoveAt(j);
                         }
                     }
                     if (before != neighbor.ids.Count) {
                         queue.Enqueue(neighbor);
                     }
+
                 }
             }
         }
