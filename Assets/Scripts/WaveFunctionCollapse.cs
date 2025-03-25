@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,36 +13,47 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
     private TileData[,] map;
     private Dictionary<int, TileTemplate> tileTemplateDic;
+    private int collapseCount = 0;
 
-    // 1、先构建map，再根据map构建mapSprites
+    // WFC的核心循环是 坍缩 - 传播约束 - 回溯
 
     private IEnumerator Start() {
         InitTileTemplates();
         map = new TileData[height, width];
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                map[y, x] = new TileData {
+                    x = x,
+                    y = y,
+                    ids = tileTemplateDic.Keys.ToList(),
+                    isCollapsed = false
+                };
+            }
+        }
 
-        // 1、随机取一个位置，设定一个随机tile
-        int randomX = Random.Range(0, width);
-        int randomY = Random.Range(0, height);
-        int randomId = tileTemplateDic.Keys.ToList()[Random.Range(0, tileTemplateDic.Count)];
-        TileData curTile = map[randomY, randomX] = new TileData { 
-            id = randomId,
-            isCollapsed = true
-        };
+        // 1、随机坍缩一个位置
+        int randomX = UnityEngine.Random.Range(0, width);
+        int randomY = UnityEngine.Random.Range(0, height);
+        int randomId = tileTemplateDic.Keys.ToList()[UnityEngine.Random.Range(0, tileTemplateDic.Count)];
+        map[randomY, randomX].ids = new List<int> { randomId };
+        map[randomY, randomX].isCollapsed = true;
+        collapseCount++;
+        TileData curTile = map[randomY, randomX];
         CreateSprite(randomX, randomY);
         yield return new WaitForSeconds(0.7f);
 
-        (int, int) curPos = (randomX, randomY);
         // 2、只要map没有全部坍缩，就不断查找最低可能性的一条边进行坍缩
         while (!IsAllCollapsed()) {
-            (int, int, int) posAndId = GetNextPosAndTileId(curPos, curTile);
-            (int, int) nextPos = (posAndId.Item1, posAndId.Item2);
-            curTile = map[nextPos.Item2, nextPos.Item1] = new TileData {
-                id = posAndId.Item3,
-                isCollapsed = true
-            };
-            curPos = nextPos;
-            CreateSprite(nextPos.Item1, nextPos.Item2);
-            yield return new WaitForSeconds(0.7f);
+            // 约束传播
+            PropagateConstraint(curTile);
+            //(int, int, int) posAndId = GetNextPosAndTileId(curPos, curTile);
+            //(int, int) nextPos = (posAndId.Item1, posAndId.Item2);
+            //map[nextPos.Item2, nextPos.Item1].ids = posAndId.Item3.ToString();
+            //map[nextPos.Item2, nextPos.Item1].isCollapsed = true;
+            //curTile = map[nextPos.Item2, nextPos.Item1];
+            //curPos = nextPos;
+            //CreateSprite(nextPos.Item1, nextPos.Item2);
+            //yield return new WaitForSeconds(0.7f);
         }
 
         // 3、根据map生成sprite
@@ -57,13 +69,45 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
     }
 
+    private void PropagateConstraint(TileData curTile) {
+        Queue<TileData> queue = new Queue<TileData>();
+        queue.Enqueue(curTile);
+        while (queue.Count != 0) {
+            TileData tile = queue.Dequeue();
+            for (int i = 0; i < 4; i++) {
+                int x = GetDeltaXByDirection(tile.x, i);
+                int y = GetDeltaYByDirection(tile.y, i);
+
+                if (IsPosValid(x, y) && map[y, x].isCollapsed == false) {
+                    TileData neighbor = map[y, x];
+                    int before = neighbor.ids.Count;
+                    for (int j = neighbor.ids.Count - 1; j >= 0; j--) {
+                        if (!CompareTile(tile.ids[0], neighbor.ids[j], i)) {
+                            neighbor.ids.RemoveAt(j);
+                        }
+                    }
+                    if (before != neighbor.ids.Count) {
+                        queue.Enqueue(neighbor);
+                    }
+                }
+            }
+        }
+        
+    }
+
     private void CreateSprite(int x, int y) {
-        Sprite sprite = sprites.Where(t => t.name == tileTemplateDic[map[y, x].id].image).FirstOrDefault();
+        Sprite sprite = sprites.Where(t => t.name == tileTemplateDic[map[y, x].ids[0]].image).FirstOrDefault();
         var go = new GameObject(sprite.name);
         go.AddComponent<SpriteRenderer>().sprite = sprite;
         go.transform.position = new Vector3(x * 0.5f, y * -0.5f, 0);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="curPos">被坍缩tile的位置</param>
+    /// <param name="curTile">已经被坍缩的tile</param>
+    /// <returns></returns>
     private (int, int, int) GetNextPosAndTileId((int, int) curPos, TileData curTile) {
         int minPossibleCount = tileTemplateDic.Count;
         (int, int) nextPos = (-1, -1);
@@ -72,7 +116,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
             int x = GetDeltaXByDirection(curPos.Item1, i);
             int y = GetDeltaYByDirection(curPos.Item2, i);
 
-            if (IsPosValid(x, y) && (map[y, x] == null || map[y, x].isCollapsed == false)) {
+            if (IsPosValid(x, y) && (map[y, x].isCollapsed == false)) {
                 var nextPossible = new List<int>();
                 // 只考虑curTile一个瓦片的i方向时，nextPossible的所有可能性瓦片
                 foreach (TileTemplate item in tileTemplateDic.Values) {
@@ -92,10 +136,12 @@ public class WaveFunctionCollapse : MonoBehaviour {
                 if (nextPossible.Count < minPossibleCount) {
                     minPossibleCount = nextPossible.Count;
                     nextPos = (x, y);
-                    randomTileId = nextPossible[Random.Range(0, nextPossible.Count)];
+                    randomTileId = nextPossible[UnityEngine.Random.Range(0, nextPossible.Count)];
                 }
             }
         }
+
+        // 这里nextPos的坐标可能还是(-1, -1)
         return (nextPos.Item1, nextPos.Item2, randomTileId);
     }
 
@@ -108,9 +154,9 @@ public class WaveFunctionCollapse : MonoBehaviour {
             if (i != direction) {
                 int x1 = GetDeltaXByDirection(x, i);
                 int y1 = GetDeltaYByDirection(y, i);
-                if (IsPosValid(x1, y1) && map[y1, x1] != null && map[y1, x1].isCollapsed == true) {
+                if (IsPosValid(x1, y1) && map[y1, x1].isCollapsed == true) {
                     for (int k = curPossible.Count - 1; k >= 0; k--) {
-                        if (!CompareTile(curPossible[k], map[y1, x1].id, i)) {
+                        if (!CompareTile(curPossible[k], map[y1, x1].ids[0], i)) {
                             curPossible.RemoveAt(k);
                         }
                     }
@@ -128,14 +174,15 @@ public class WaveFunctionCollapse : MonoBehaviour {
     }
 
     private bool IsAllCollapsed() {
-        for (int y = 0; y < map.GetLength(0); y++) {
-            for (int x = 0; x < map.GetLength(1); x++) {
-                if (map[y, x] == null || map[y, x].isCollapsed == false) {
-                    return false;
-                }
-            }
-        }
-        return true;
+        //for (int y = 0; y < map.GetLength(0); y++) {
+        //    for (int x = 0; x < map.GetLength(1); x++) {
+        //        if (map[y, x].isCollapsed == false) {
+        //            return false;
+        //        }
+        //    }
+        //}
+        //return true;
+        return collapseCount == width * height;
     }
 
     // todo 可改为读取scriptableobject
@@ -175,7 +222,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
     }
 
     private bool CompareTile(TileData a, TileTemplate b, int direction) {
-        return CompareTile(tileTemplateDic[a.id], b, direction);
+        return CompareTile(tileTemplateDic[a.ids[0]], b, direction);
     }
 
     private bool CompareTile(int tileId, int otherTileId, int direction) {
