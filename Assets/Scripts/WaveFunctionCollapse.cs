@@ -14,6 +14,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
     private TileData[,] map;
     private List<TileData> notCollapsedMap;
     private Dictionary<int, TileTemplate> tileTemplateDic;
+    private Dictionary<float, float> logDic;
     private int collapseCount = 0;
 
     // WFC的核心循环是 坍缩 - 传播约束 - 回溯
@@ -49,11 +50,11 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
         float startTime = Time.realtimeSinceStartup;
         while (!IsAllCollapsed()) {
-            // 约束传播
+            // 传播约束
             PropagateConstraint(curTile);
 
             // 坍缩
-            TileData minEntropy = notCollapsedMap.OrderBy(t => CalcEntropy(t)).First();
+            TileData minEntropy = notCollapsedMap.OrderBy(t => CalcEntropy(t)).First(); // 此段代码最消耗性能
             int rId = GetRandomTile(minEntropy.ids);
             for (int i = minEntropy.ids.Count - 1; i >= 0; i--) {
                 if (minEntropy.ids[i] != rId) {
@@ -84,12 +85,14 @@ public class WaveFunctionCollapse : MonoBehaviour {
     }
 
     private float CalcEntropy(TileData td) {
+        if (td.ids.Count == tileTemplateDic.Count) {
+            return 100f;
+        }
         float sum = 0f;
         for (int i = 0; i < td.ids.Count; i++) {
             int id = td.ids[i];
             float p = tileTemplateDic[id].p;
-            // Mathf.Log消耗性能
-            sum += -(p * Mathf.Log(p, 2));
+            sum += logDic[p];
         }
         
         return sum;
@@ -100,15 +103,15 @@ public class WaveFunctionCollapse : MonoBehaviour {
         queue.Enqueue(curTile);
         while (queue.Count != 0) {
             TileData tile = queue.Dequeue(); 
-            for (int i = 0; i < 4; i++) {
-                int x = GetDeltaXByDirection(tile.x, i);
-                int y = GetDeltaYByDirection(tile.y, i);
+            for (int direction = 0; direction < 4; direction++) {
+                int x = GetDeltaXByDirection(tile.x, direction);
+                int y = GetDeltaYByDirection(tile.y, direction);
 
                 if (IsPosValid(x, y) && map[y, x].isCollapsed == false) {
                     TileData neighbor = map[y, x];
                     int before = neighbor.ids.Count;
                     for (int j = neighbor.ids.Count - 1; j >= 0; j--) {
-                        if (tile.ids.Any(t => CompareTile(t, neighbor.ids[j], i))) {
+                        if (tile.ids.Any(t => CompareTile(t, neighbor.ids[j], direction))) {
                             continue;
                         } else {
                             neighbor.ids.RemoveAt(j);
@@ -184,6 +187,13 @@ public class WaveFunctionCollapse : MonoBehaviour {
         tileTemplateDic[right.id] = right;
         tileTemplateDic[down.id] = down;
         tileTemplateDic[left.id] = left;
+
+        logDic = new Dictionary<float, float>();
+        logDic[blank.p] = -blank.p * Mathf.Log(blank.p, 2);
+        logDic[up.p] = -up.p * Mathf.Log(up.p, 2);
+        logDic[right.p] = -right.p * Mathf.Log(right.p, 2);
+        logDic[down.p] = -down.p * Mathf.Log(down.p, 2);
+        logDic[left.p] = -left.p * Mathf.Log(left.p, 2);
     }
 
     private bool CompareTile(int tileId, int otherTileId, int direction) {
