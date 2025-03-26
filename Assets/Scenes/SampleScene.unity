@@ -374,8 +374,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 288cd2ea9d51d5246947b7f361a2efab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 10
-  height: 9
+  width: 50
+  height: 100
   sprites:
   - {fileID: 21300000, guid: 97b17bd47aa2b864cae90c9b51aeef8a, type: 3}
   - {fileID: 21300000, guid: c6aca73655982f04eabcad882be07617, type: 3}

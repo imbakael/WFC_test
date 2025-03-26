@@ -12,7 +12,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
     [SerializeField] private Sprite[] sprites;
 
     private TileData[,] map;
-    private List<TileData> mapList;
+    private List<TileData> notCollapsedMap;
     private Dictionary<int, TileTemplate> tileTemplateDic;
     private int collapseCount = 0;
 
@@ -21,53 +21,78 @@ public class WaveFunctionCollapse : MonoBehaviour {
     private IEnumerator Start() {
         InitTileTemplates();
         map = new TileData[height, width];
-        mapList = new List<TileData>();
+        notCollapsedMap = new List<TileData>();
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                TileData t = new TileData {
+                var t = new TileData {
                     x = x,
                     y = y,
                     ids = tileTemplateDic.Keys.ToList(),
                     isCollapsed = false
                 };
                 map[y, x] = t;
-                mapList.Add(t);
+                notCollapsedMap.Add(t);
             }
         }
 
         // 1、随机坍缩一个位置
         int randomX = UnityEngine.Random.Range(0, width);
         int randomY = UnityEngine.Random.Range(0, height);
-        int randomId = tileTemplateDic.Keys.ToList()[UnityEngine.Random.Range(0, tileTemplateDic.Count)];
+        int randomId = GetRandomTile(tileTemplateDic.Keys.ToList());
         map[randomY, randomX].ids = new List<int> { randomId };
         map[randomY, randomX].isCollapsed = true;
         collapseCount++;
         TileData curTile = map[randomY, randomX];
+        notCollapsedMap.Remove(curTile);
         CreateSprite(randomX, randomY);
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(0.1f);
 
-        // 2、只要map没有全部坍缩，就不断查找最低可能性的一条边进行坍缩
+        float startTime = Time.realtimeSinceStartup;
         while (!IsAllCollapsed()) {
             // 约束传播
             PropagateConstraint(curTile);
 
             // 坍缩
-            // todo 求熵
-            TileData minPossible = mapList.Where(t => t.isCollapsed == false).OrderBy(t => t.ids.Count).First();
-            int rId = minPossible.ids[UnityEngine.Random.Range(0, minPossible.ids.Count)];
-            for (int i = minPossible.ids.Count - 1; i >= 0; i--) {
-                if (minPossible.ids[i] != rId) {
-                    minPossible.ids.RemoveAt(i);
+            TileData minEntropy = notCollapsedMap.OrderBy(t => CalcEntropy(t)).First();
+            int rId = GetRandomTile(minEntropy.ids);
+            for (int i = minEntropy.ids.Count - 1; i >= 0; i--) {
+                if (minEntropy.ids[i] != rId) {
+                    minEntropy.ids.RemoveAt(i);
                 }
             }
-            minPossible.isCollapsed = true;
+            minEntropy.isCollapsed = true;
+            notCollapsedMap.Remove(minEntropy);
             collapseCount++;
-            CreateSprite(minPossible.x, minPossible.y);
-            curTile = minPossible;
-            yield return new WaitForSeconds(0.5f);
+            CreateSprite(minEntropy.x, minEntropy.y);
+            curTile = minEntropy;
 
         }
-        Debug.Log("全部坍缩！");
+        Debug.Log($"全部坍缩！用时：{Time.realtimeSinceStartup - startTime}");
+    }
+
+    private int GetRandomTile(List<int> ids) {
+        float random = UnityEngine.Random.Range(0, 1f);
+        float sumP = ids.Sum(t => tileTemplateDic[t].p);
+        float curP = 0f;
+        for (int i = 0; i < ids.Count; i++) {
+            curP += tileTemplateDic[ids[i]].p / sumP;
+            if (random <= curP) {
+                return ids[i];
+            }
+        }
+        return ids[0];
+    }
+
+    private float CalcEntropy(TileData td) {
+        float sum = 0f;
+        for (int i = 0; i < td.ids.Count; i++) {
+            int id = td.ids[i];
+            float p = tileTemplateDic[id].p;
+            // Mathf.Log消耗性能
+            sum += -(p * Mathf.Log(p, 2));
+        }
+        
+        return sum;
     }
 
     private void PropagateConstraint(TileData curTile) {
@@ -125,26 +150,31 @@ public class WaveFunctionCollapse : MonoBehaviour {
         var blank = new TileTemplate {
             id = 3,
             image = "blank",
+            p = 0.6f,
             edge = new string[] { "AAA", "AAA", "AAA", "AAA" }
         };
         var up = new TileTemplate {
             id = 5,
             image = "up",
+            p = 0.1f,
             edge = new string[] { "ABA", "ABA", "AAA", "ABA"}
         };
         var right = new TileTemplate {
             id = 7,
             image = "right",
+            p = 0.1f,
             edge = new string[] { "ABA", "ABA", "ABA", "AAA" }
         };
         var down = new TileTemplate {
             id = 9,
             image = "down",
+            p = 0.1f,
             edge = new string[] { "AAA", "ABA", "ABA", "ABA" }
         };
         var left = new TileTemplate {
             id = 11,
             image = "left",
+            p = 0.1f,
             edge = new string[] { "ABA", "AAA", "ABA", "ABA" }
         };
 
@@ -154,10 +184,6 @@ public class WaveFunctionCollapse : MonoBehaviour {
         tileTemplateDic[right.id] = right;
         tileTemplateDic[down.id] = down;
         tileTemplateDic[left.id] = left;
-    }
-
-    private bool CompareTile(TileData a, TileTemplate b, int direction) {
-        return CompareTile(tileTemplateDic[a.ids[0]], b, direction);
     }
 
     private bool CompareTile(int tileId, int otherTileId, int direction) {
