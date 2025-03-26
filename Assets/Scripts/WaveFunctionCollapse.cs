@@ -21,20 +21,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
     private IEnumerator Start() {
         InitTileTemplates();
-        map = new TileData[height, width];
-        notCollapsedMap = new List<TileData>();
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                var t = new TileData {
-                    x = x,
-                    y = y,
-                    ids = tileTemplateDic.Keys.ToList(),
-                    isCollapsed = false
-                };
-                map[y, x] = t;
-                notCollapsedMap.Add(t);
-            }
-        }
+        InitMap();
 
         // 1、随机坍缩一个位置
         int randomX = UnityEngine.Random.Range(0, width);
@@ -71,6 +58,23 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
         }
         Debug.Log($"全部坍缩！用时：{Time.realtimeSinceStartup - startTime}");
+    }
+
+    private void InitMap() {
+        map = new TileData[height, width];
+        notCollapsedMap = new List<TileData>();
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                var t = new TileData {
+                    x = x,
+                    y = y,
+                    ids = tileTemplateDic.Keys.ToList(),
+                    isCollapsed = false
+                };
+                map[y, x] = t;
+                notCollapsedMap.Add(t);
+            }
+        }
     }
 
     private int GetRandomTile(List<int> ids) {

@@ -1,7 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
 
 // Tile模版，核心是edge字段
 public class TileTemplate {
@@ -19,5 +17,4 @@ public class TileData {
     public List<int> ids;
     public int rotateTimes; // 0表示顺时针旋转0次，最多旋转3次，旋转后对应的edge也要做处理
     public bool isCollapsed;
-    public bool IsCollapsed => ids.Count == 1;
 }
