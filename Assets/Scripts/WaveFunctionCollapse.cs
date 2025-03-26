@@ -14,7 +14,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
     private TileData[,] map;
     private List<TileData> notCollapsedMap;
     private Dictionary<int, TileTemplate> tileTemplateDic;
-    private Dictionary<float, float> logDic;
+    private Dictionary<float, float> entropyCache;
     private int collapseCount = 0;
 
     // WFC的核心循环是 坍缩 - 传播约束 - 回溯
@@ -55,6 +55,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
             // 坍缩
             TileData minEntropy = notCollapsedMap.OrderBy(t => CalcEntropy(t)).First(); // 此段代码最消耗性能
+            //TileData minEntropy = notCollapsedMap[^1];
             int rId = GetRandomTile(minEntropy.ids);
             for (int i = minEntropy.ids.Count - 1; i >= 0; i--) {
                 if (minEntropy.ids[i] != rId) {
@@ -63,6 +64,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
             }
             minEntropy.isCollapsed = true;
             notCollapsedMap.Remove(minEntropy);
+            //notCollapsedMap.RemoveAt(notCollapsedMap.Count - 1);
             collapseCount++;
             CreateSprite(minEntropy.x, minEntropy.y);
             curTile = minEntropy;
@@ -92,17 +94,17 @@ public class WaveFunctionCollapse : MonoBehaviour {
         for (int i = 0; i < td.ids.Count; i++) {
             int id = td.ids[i];
             float p = tileTemplateDic[id].p;
-            sum += logDic[p];
+            sum += entropyCache[p];
         }
         
         return sum;
     }
 
     private void PropagateConstraint(TileData curTile) {
-        var queue = new Queue<TileData>();
-        queue.Enqueue(curTile);
-        while (queue.Count != 0) {
-            TileData tile = queue.Dequeue(); 
+        var stack = new Stack<TileData>();
+        stack.Push(curTile);
+        while (stack.Count != 0) {
+            TileData tile = stack.Pop(); 
             for (int direction = 0; direction < 4; direction++) {
                 int x = GetDeltaXByDirection(tile.x, direction);
                 int y = GetDeltaYByDirection(tile.y, direction);
@@ -118,7 +120,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
                         }
                     }
                     if (before != neighbor.ids.Count) {
-                        queue.Enqueue(neighbor);
+                        stack.Push(neighbor);
                     }
                 }
             }
@@ -188,12 +190,12 @@ public class WaveFunctionCollapse : MonoBehaviour {
         tileTemplateDic[down.id] = down;
         tileTemplateDic[left.id] = left;
 
-        logDic = new Dictionary<float, float>();
-        logDic[blank.p] = -blank.p * Mathf.Log(blank.p, 2);
-        logDic[up.p] = -up.p * Mathf.Log(up.p, 2);
-        logDic[right.p] = -right.p * Mathf.Log(right.p, 2);
-        logDic[down.p] = -down.p * Mathf.Log(down.p, 2);
-        logDic[left.p] = -left.p * Mathf.Log(left.p, 2);
+        entropyCache = new Dictionary<float, float>();
+        foreach (TileTemplate tt in tileTemplateDic.Values) {
+            if (!entropyCache.ContainsKey(tt.p)) {
+                entropyCache[tt.p] = -tt.p * Mathf.Log(tt.p, 2);
+            }
+        }
     }
 
     private bool CompareTile(int tileId, int otherTileId, int direction) {
