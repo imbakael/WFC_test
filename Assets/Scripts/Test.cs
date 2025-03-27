@@ -5,29 +5,43 @@ using UnityEngine;
 
 public class Test : MonoBehaviour {
 
+    public int count = 10000;
 
-
-    private void Start() {
-        List<int> a = new List<int> { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-        a.RemoveAt(3);
-        string result = "";
-        for (int i = 0; i < a.Count; i++) {
-            result += a[i] + ",";
+    private void Update() {
+        if (Input.GetKeyDown(KeyCode.J)) {
+            string a = "ABCDEF";
+            string b = "FEDCBA";
+            float startTime = Time.realtimeSinceStartup;
+            for (int i = 0; i < count; i++) {
+                CompareEdge(a, b);
+            }
+            Debug.Log($"第1种方法用时：{Time.realtimeSinceStartup - startTime}");
         }
-        Debug.Log("after remove 3 = " + result);
 
-        a.RemoveAt(5);
-        result = "";
-        for (int i = 0; i < a.Count; i++) {
-            result += a[i] + ",";
+        if (Input.GetKeyDown(KeyCode.K)) {
+            string a = "ABCDEF";
+            string b = "FEDCBA";
+            float startTime = Time.realtimeSinceStartup;
+            for (int i = 0; i < count; i++) {
+                Util.IsReverseEqual(a, b);
+            }
+            Debug.Log($"第2种方法用时：{Time.realtimeSinceStartup - startTime}");
         }
-        Debug.Log("after remove 5 = " + result);
 
-        a.RemoveAt(6);
-        result = "";
-        for (int i = 0; i < a.Count; i++) {
-            result += a[i] + ",";
+        if (Input.GetKeyDown(KeyCode.L)) {
+            string a = "ABCDEF";
+            string b = "FEDCBA";
+            float startTime = Time.realtimeSinceStartup;
+            for (int i = 0; i < count; i++) {
+                a.Reverse().SequenceEqual(b);
+            }
+            Debug.Log($"第3种方法用时：{Time.realtimeSinceStartup - startTime}");
         }
-        Debug.Log("after remove 6 = " + result);
+    }
+
+
+    private bool CompareEdge(string a, string b) {
+        var reverseA = new string(a.Reverse().ToArray());
+        return reverseA == b;
     }
 }

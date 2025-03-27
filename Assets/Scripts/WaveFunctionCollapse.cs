@@ -212,11 +212,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
     private bool CompareTile(TileTemplate a, TileTemplate b, int direction) {
         string edgeA = a.edge[direction];
         string edgeB = b.edge[direction > 1 ? direction - 2 : direction + 2];
-        return CompareEdge(edgeA, edgeB);
+        return Util.IsReverseEqual(edgeA, edgeB);
     }
 
-    private bool CompareEdge(string a, string b) {
-        var reverseA = new string(a.Reverse().ToArray());
-        return reverseA == b;
-    }
 }
