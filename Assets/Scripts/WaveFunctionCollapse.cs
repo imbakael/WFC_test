@@ -16,6 +16,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
     private Dictionary<int, TileTemplate> tileTemplateDic;
     private Dictionary<float, float> entropyCache;
     private int collapseCount = 0;
+    private Stack<TileData> tempStack = new Stack<TileData>(); 
 
     // WFC的核心循环是 坍缩 - 传播约束 - 回溯
 
@@ -23,10 +24,6 @@ public class WaveFunctionCollapse : MonoBehaviour {
         InitTileTemplates();
         InitMap();
 
-        // 1、随机坍缩一个位置
-        //int randomX = UnityEngine.Random.Range(0, width);
-        //int randomY = UnityEngine.Random.Range(0, height);
-        //int randomId = GetRandomTile(tileTemplateDic.Keys.ToList());
         int randomX = 0;
         int randomY = 0;
         int randomId = 3;
@@ -61,6 +58,54 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
         }
         Debug.Log($"全部坍缩！用时：{Time.realtimeSinceStartup - startTime}");
+    }
+
+    // todo 可改为读取scriptableobject
+    public void InitTileTemplates() {
+        var blank = new TileTemplate {
+            id = 3,
+            image = "blank",
+            p = 0.6f,
+            edge = new string[] { "AAA", "AAA", "AAA", "AAA" }
+        };
+        var up = new TileTemplate {
+            id = 5,
+            image = "up",
+            p = 0.1f,
+            edge = new string[] { "ABA", "ABA", "AAA", "ABA" }
+        };
+        var right = new TileTemplate {
+            id = 7,
+            image = "right",
+            p = 0.1f,
+            edge = new string[] { "ABA", "ABA", "ABA", "AAA" }
+        };
+        var down = new TileTemplate {
+            id = 9,
+            image = "down",
+            p = 0.1f,
+            edge = new string[] { "AAA", "ABA", "ABA", "ABA" }
+        };
+        var left = new TileTemplate {
+            id = 11,
+            image = "left",
+            p = 0.1f,
+            edge = new string[] { "ABA", "AAA", "ABA", "ABA" }
+        };
+
+        tileTemplateDic = new Dictionary<int, TileTemplate>();
+        tileTemplateDic[blank.id] = blank;
+        tileTemplateDic[up.id] = up;
+        tileTemplateDic[right.id] = right;
+        tileTemplateDic[down.id] = down;
+        tileTemplateDic[left.id] = left;
+
+        entropyCache = new Dictionary<float, float>();
+        foreach (TileTemplate tt in tileTemplateDic.Values) {
+            if (!entropyCache.ContainsKey(tt.p)) {
+                entropyCache[tt.p] = -tt.p * Mathf.Log(tt.p, 2);
+            }
+        }
     }
 
     private void InitMap() {
@@ -108,10 +153,9 @@ public class WaveFunctionCollapse : MonoBehaviour {
     }
 
     private void PropagateConstraint(TileData curTile) {
-        var stack = new Stack<TileData>();
-        stack.Push(curTile);
-        while (stack.Count != 0) {
-            TileData tile = stack.Pop(); 
+        tempStack.Push(curTile);
+        while (tempStack.Count != 0) {
+            TileData tile = tempStack.Pop(); 
             for (int direction = 0; direction < 4; direction++) {
                 int x = GetDeltaXByDirection(tile.x, direction);
                 int y = GetDeltaYByDirection(tile.y, direction);
@@ -127,7 +171,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
                         }
                     }
                     if (before != neighbor.ids.Count) {
-                        stack.Push(neighbor);
+                        tempStack.Push(neighbor);
                     }
                 }
             }
@@ -155,54 +199,6 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
     private bool IsAllCollapsed() {
         return collapseCount == width * height;
-    }
-
-    // todo 可改为读取scriptableobject
-    public void InitTileTemplates() {
-        var blank = new TileTemplate {
-            id = 3,
-            image = "blank",
-            p = 0.6f,
-            edge = new string[] { "AAA", "AAA", "AAA", "AAA" }
-        };
-        var up = new TileTemplate {
-            id = 5,
-            image = "up",
-            p = 0.1f,
-            edge = new string[] { "ABA", "ABA", "AAA", "ABA"}
-        };
-        var right = new TileTemplate {
-            id = 7,
-            image = "right",
-            p = 0.1f,
-            edge = new string[] { "ABA", "ABA", "ABA", "AAA" }
-        };
-        var down = new TileTemplate {
-            id = 9,
-            image = "down",
-            p = 0.1f,
-            edge = new string[] { "AAA", "ABA", "ABA", "ABA" }
-        };
-        var left = new TileTemplate {
-            id = 11,
-            image = "left",
-            p = 0.1f,
-            edge = new string[] { "ABA", "AAA", "ABA", "ABA" }
-        };
-
-        tileTemplateDic = new Dictionary<int, TileTemplate>();
-        tileTemplateDic[blank.id] = blank;
-        tileTemplateDic[up.id] = up;
-        tileTemplateDic[right.id] = right;
-        tileTemplateDic[down.id] = down;
-        tileTemplateDic[left.id] = left;
-
-        entropyCache = new Dictionary<float, float>();
-        foreach (TileTemplate tt in tileTemplateDic.Values) {
-            if (!entropyCache.ContainsKey(tt.p)) {
-                entropyCache[tt.p] = -tt.p * Mathf.Log(tt.p, 2);
-            }
-        }
     }
 
     private bool CompareTile(int tileId, int otherTileId, int direction) {
