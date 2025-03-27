@@ -24,9 +24,12 @@ public class WaveFunctionCollapse : MonoBehaviour {
         InitMap();
 
         // 1、随机坍缩一个位置
-        int randomX = UnityEngine.Random.Range(0, width);
-        int randomY = UnityEngine.Random.Range(0, height);
-        int randomId = GetRandomTile(tileTemplateDic.Keys.ToList());
+        //int randomX = UnityEngine.Random.Range(0, width);
+        //int randomY = UnityEngine.Random.Range(0, height);
+        //int randomId = GetRandomTile(tileTemplateDic.Keys.ToList());
+        int randomX = 0;
+        int randomY = 0;
+        int randomId = 3;
         map[randomY, randomX].ids = new List<int> { randomId };
         map[randomY, randomX].isCollapsed = true;
         collapseCount++;
