@@ -6,6 +6,8 @@ using UnityEngine;
 
 public class WaveFunctionCollapse : MonoBehaviour {
 
+    private const float MAX_ENTROPY = 100f;
+
     public int width;
     public int height;
 
@@ -16,7 +18,11 @@ public class WaveFunctionCollapse : MonoBehaviour {
     private Dictionary<int, TileTemplate> tileTemplateDic;
     private Dictionary<float, float> entropyCache;
     private int collapseCount = 0;
-    private Stack<TileData> tempStack = new Stack<TileData>(); 
+    // 性能优化
+    private Stack<TileData> tempStack = new Stack<TileData>();
+    private float[] entropyCacheArray;
+    // test
+    private int modifyCount = 0;
 
     // WFC的核心循环是 坍缩 - 传播约束 - 回溯
 
@@ -24,8 +30,8 @@ public class WaveFunctionCollapse : MonoBehaviour {
         InitTileTemplates();
         InitMap();
 
-        int randomX = 0;
-        int randomY = 0;
+        int randomX = width / 2;
+        int randomY = height / 2;
         int randomId = 3;
         map[randomY, randomX].ids = new List<int> { randomId };
         map[randomY, randomX].isCollapsed = true;
@@ -41,8 +47,15 @@ public class WaveFunctionCollapse : MonoBehaviour {
             PropagateConstraint(curTile);
 
             // 坍缩
-            TileData minEntropy = notCollapsedMap.OrderBy(t => CalcEntropy(t)).First(); // 此段代码最消耗性能
+            //TileData minEntropy = notCollapsedMap.OrderBy(t => CalcEntropy(t)).First();
+            TileData minEntropy = notCollapsedMap.OrderBy(t => entropyCacheArray[t.y * width + t.x]).First();
+
+            //notCollapsedMap.Sort((a, b) => {
+            //    return entropyCacheArray[b.y * width + b.x].CompareTo(entropyCacheArray[a.y * width + a.x]);
+            //});
+
             //TileData minEntropy = notCollapsedMap[^1];
+            //TileData minEntropy = notCollapsedMap[0];
             int rId = GetRandomTile(minEntropy.ids);
             for (int i = minEntropy.ids.Count - 1; i >= 0; i--) {
                 if (minEntropy.ids[i] != rId) {
@@ -57,7 +70,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
             curTile = minEntropy;
 
         }
-        Debug.Log($"全部坍缩！用时：{Time.realtimeSinceStartup - startTime}");
+        Debug.Log($"全部坍缩！用时：{Time.realtimeSinceStartup - startTime}, modifyCount = {modifyCount}");
     }
 
     // todo 可改为读取scriptableobject
@@ -111,6 +124,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
     private void InitMap() {
         map = new TileData[height, width];
         notCollapsedMap = new List<TileData>();
+        entropyCacheArray = new float[width * height];
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 var t = new TileData {
@@ -121,6 +135,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
                 };
                 map[y, x] = t;
                 notCollapsedMap.Add(t);
+                entropyCacheArray[y * width + x] = MAX_ENTROPY;
             }
         }
     }
@@ -140,7 +155,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
     private float CalcEntropy(TileData td) {
         if (td.ids.Count == tileTemplateDic.Count) {
-            return 100f;
+            return MAX_ENTROPY;
         }
         float sum = 0f;
         for (int i = 0; i < td.ids.Count; i++) {
@@ -172,6 +187,8 @@ public class WaveFunctionCollapse : MonoBehaviour {
                     }
                     if (before != neighbor.ids.Count) {
                         tempStack.Push(neighbor);
+                        entropyCacheArray[y * width + x] = CalcEntropy(neighbor);
+                        modifyCount++;
                     }
                 }
             }
