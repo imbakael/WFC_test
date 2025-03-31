@@ -17,7 +17,6 @@ public class WaveFunctionCollapse : MonoBehaviour {
     private List<TileData> notCollapsedMap;
     private Dictionary<int, TileTemplate> tileTemplateDic;
     private Dictionary<float, float> entropyCache;
-    private int collapseCount = 0;
     // 性能优化
     private Stack<TileData> tempStack = new Stack<TileData>();
     private float[] entropyCacheArray;
@@ -35,14 +34,13 @@ public class WaveFunctionCollapse : MonoBehaviour {
         int randomId = 3;
         map[randomY, randomX].ids = new List<int> { randomId };
         map[randomY, randomX].isCollapsed = true;
-        collapseCount++;
         TileData curTile = map[randomY, randomX];
         notCollapsedMap.Remove(curTile);
         CreateSprite(randomX, randomY);
         yield return new WaitForSeconds(0.1f);
 
         float startTime = Time.realtimeSinceStartup;
-        while (!IsAllCollapsed()) {
+        while (notCollapsedMap.Count > 0) {
             // 传播约束
             PropagateConstraint(curTile);
 
@@ -56,16 +54,18 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
             //TileData minEntropy = notCollapsedMap[^1];
             //TileData minEntropy = notCollapsedMap[0];
-            int rId = GetRandomTile(minEntropy.ids);
-            for (int i = minEntropy.ids.Count - 1; i >= 0; i--) {
-                if (minEntropy.ids[i] != rId) {
-                    minEntropy.ids.RemoveAt(i);
+            if (minEntropy.ids.Count > 1) {
+                int rId = GetRandomTile(minEntropy.ids);
+                for (int i = minEntropy.ids.Count - 1; i >= 0; i--) {
+                    if (minEntropy.ids[i] != rId) {
+                        minEntropy.ids.RemoveAt(i);
+                    }
                 }
             }
+
             minEntropy.isCollapsed = true;
             notCollapsedMap.Remove(minEntropy);
             //notCollapsedMap.RemoveAt(notCollapsedMap.Count - 1);
-            collapseCount++;
             CreateSprite(minEntropy.x, minEntropy.y);
             curTile = minEntropy;
 
@@ -212,10 +212,6 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
     private int GetDeltaYByDirection(int originY, int direction) {
         return originY + (direction == 0 ? -1 : direction == 2 ? 1 : 0);
-    }
-
-    private bool IsAllCollapsed() {
-        return collapseCount == width * height;
     }
 
     private bool CompareTile(int tileId, int otherTileId, int direction) {
