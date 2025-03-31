@@ -19,10 +19,19 @@ public class IndexedMinHeap {
         if (!indices.TryGetValue(td, out int index)) {
             throw new KeyNotFoundException("Element not found in heap");
         }
-        Swap(index, heap.Count - 1);
-        heap.RemoveAt(heap.Count - 1);
+        int lastIndex = heap.Count - 1;
+        Swap(index, lastIndex);
+        heap.RemoveAt(lastIndex);
         indices.Remove(td);
-        HeapIfDown(index);
+        
+        if (index == lastIndex || heap.Count == 0) {
+            return;
+        }
+        TileData move = heap[index];
+        HeapIfUp(index);
+        if (indices.TryGetValue(move, out int currentIndex) && currentIndex == index) {
+            HeapIfDown(index);
+        }
     }
 
     public TileData ExtractMin() {
@@ -45,7 +54,7 @@ public class IndexedMinHeap {
         td.entropy = newEntropy;
         if (newEntropy < oldEntropy) {
             HeapIfUp(index);
-        } else {
+        } else if (newEntropy > oldEntropy) {
             HeapIfDown(index);
         }
     }
@@ -79,6 +88,9 @@ public class IndexedMinHeap {
     }
 
     private void Swap(int a, int b) {
+        if (a == b) {
+            return;
+        }
         TileData temp = heap[a];
         heap[a] = heap[b];
         heap[b] = temp;
