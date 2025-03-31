@@ -17,4 +17,5 @@ public class TileData {
     public List<int> ids;
     public int rotateTimes; // 0表示顺时针旋转0次，最多旋转3次，旋转后对应的edge也要做处理
     public bool isCollapsed;
+    public float entropy;
 }
