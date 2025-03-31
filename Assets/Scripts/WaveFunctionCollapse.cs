@@ -32,6 +32,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
         int randomY = height / 2;
         int randomId = 3;
         map[randomY, randomX].ids = new List<int> { randomId };
+        map[randomY, randomX].entropy = CalcEntropy(map[randomY, randomX]);
         map[randomY, randomX].isCollapsed = true;
         TileData curTile = map[randomY, randomX];
         indexdMinHeap.Remove(curTile);
