@@ -14,7 +14,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
     [SerializeField] private Sprite[] sprites;
 
     private TileData[,] map;
-    private List<TileData> notCollapsedMap;
+    private IndexedMinHeap indexdMinHeap;
     private Dictionary<int, TileTemplate> tileTemplateDic;
     private Dictionary<float, float> entropyCache;
     // 性能优化
@@ -34,17 +34,18 @@ public class WaveFunctionCollapse : MonoBehaviour {
         map[randomY, randomX].ids = new List<int> { randomId };
         map[randomY, randomX].isCollapsed = true;
         TileData curTile = map[randomY, randomX];
-        notCollapsedMap.Remove(curTile);
+        indexdMinHeap.Remove(curTile);
+
         CreateSprite(randomX, randomY);
         yield return new WaitForSeconds(0.1f);
 
         float startTime = Time.realtimeSinceStartup;
-        while (notCollapsedMap.Count > 0) {
+        while (indexdMinHeap.Count > 0) {
             // 传播约束
             PropagateConstraint(curTile);
 
             // 坍缩
-            TileData minEntropy = notCollapsedMap.OrderBy(t => t.entropy).First();
+            TileData minEntropy = indexdMinHeap.ExtractMin();
 
             if (minEntropy.ids.Count > 1) {
                 int rId = GetRandomTile(minEntropy.ids);
@@ -56,7 +57,6 @@ public class WaveFunctionCollapse : MonoBehaviour {
             }
 
             minEntropy.isCollapsed = true;
-            notCollapsedMap.Remove(minEntropy);
             CreateSprite(minEntropy.x, minEntropy.y);
             curTile = minEntropy;
 
@@ -114,7 +114,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
     private void InitMap() {
         map = new TileData[height, width];
-        notCollapsedMap = new List<TileData>();
+        indexdMinHeap = new IndexedMinHeap();
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 var t = new TileData {
@@ -125,7 +125,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
                     entropy = MAX_ENTROPY
                 };
                 map[y, x] = t;
-                notCollapsedMap.Add(t);
+                indexdMinHeap.Insert(t);
             }
         }
     }
@@ -177,7 +177,8 @@ public class WaveFunctionCollapse : MonoBehaviour {
                     }
                     if (before != neighbor.ids.Count) {
                         tempStack.Push(neighbor);
-                        neighbor.entropy = CalcEntropy(neighbor);
+                        float newEntropy = CalcEntropy(neighbor);
+                        indexdMinHeap.Update(neighbor, newEntropy);
                         modifyCount++;
                     }
                 }
