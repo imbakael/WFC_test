@@ -1,7 +1,5 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 public class IndexedMinHeap {
     private List<TileData> heap = new List<TileData>();
@@ -23,15 +21,7 @@ public class IndexedMinHeap {
         Swap(index, lastIndex);
         heap.RemoveAt(lastIndex);
         indices.Remove(td);
-        
-        if (index == lastIndex || heap.Count == 0) {
-            return;
-        }
-        TileData move = heap[index];
-        HeapIfUp(index);
-        if (indices.TryGetValue(move, out int currentIndex) && currentIndex == index) {
-            HeapIfDown(index);
-        }
+        HeapIfDown(index);
     }
 
     public TileData ExtractMin() {
