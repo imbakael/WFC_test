@@ -375,14 +375,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 288cd2ea9d51d5246947b7f361a2efab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 100
-  height: 100
+  width: 10
+  height: 10
   sprites:
-  - {fileID: 21300000, guid: 97b17bd47aa2b864cae90c9b51aeef8a, type: 3}
-  - {fileID: 21300000, guid: c6aca73655982f04eabcad882be07617, type: 3}
-  - {fileID: 21300000, guid: 8130bd166f213ed4096679ada74a82b9, type: 3}
-  - {fileID: 21300000, guid: cdc086b8e4b8cd64791c7cd0e6b2275e, type: 3}
-  - {fileID: 21300000, guid: b05b752c7f523544fb3570cdea32269a, type: 3}
+  - {fileID: 21300000, guid: 2b73aaa45f5c4eb45b83382f3af27be4, type: 3}
+  - {fileID: 21300000, guid: a620db7acd2bc7c4184e7be78b106e16, type: 3}
+  - {fileID: 21300000, guid: 61187f0f6d2fd424dbf538d20901f813, type: 3}
 --- !u!4 &1082174425
 Transform:
   m_ObjectHideFlags: 0

@@ -81,9 +81,7 @@ public class IndexedMinHeap {
         if (a == b) {
             return;
         }
-        TileData temp = heap[a];
-        heap[a] = heap[b];
-        heap[b] = temp;
+        (heap[b], heap[a]) = (heap[a], heap[b]);
         indices[heap[a]] = a;
         indices[heap[b]] = b;
     }
