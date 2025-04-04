@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor.VersionControl;
 using UnityEngine;
 
 public class WaveFunctionCollapse : MonoBehaviour {
@@ -31,7 +32,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
         int randomX = width / 2;
         int randomY = height / 2;
-        int randomId = 13;
+        int randomId = 15;
         map[randomY, randomX].ids = new List<int> { randomId };
         map[randomY, randomX].validRotateTimes = new Dictionary<int, List<int>> {
             { randomId, new List<int> { 0 } }
@@ -57,9 +58,10 @@ public class WaveFunctionCollapse : MonoBehaviour {
             if (minEntropy.ids.Count > 1) {
                 rId = GetRandomTile(minEntropy.ids);
                 for (int i = minEntropy.ids.Count - 1; i >= 0; i--) {
-                    if (minEntropy.ids[i] != rId) {
+                    int curId = minEntropy.ids[i];
+                    if (curId != rId) {
+                        minEntropy.validRotateTimes.Remove(curId);
                         minEntropy.ids.RemoveAt(i);
-                        minEntropy.validRotateTimes.Remove(minEntropy.ids[i]);
                     }
                 }
             } else {
@@ -77,7 +79,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
             minEntropy.isCollapsed = true;
             CreateSprite(minEntropy);
             curTile = minEntropy;
-            yield return new WaitForSeconds(0.1f);
+            //yield return new WaitForSeconds(0.1f);
         }
         Debug.Log($"全部坍缩！用时：{Time.realtimeSinceStartup - startTime}, modifyCount = {modifyCount}");
     }
@@ -174,16 +176,9 @@ public class WaveFunctionCollapse : MonoBehaviour {
                 int y = GetDeltaYByDirection(tile.y, direction);
 
                 if (IsPosValid(x, y) && map[y, x].isCollapsed == false) {
+                    HashSet<string> allEdgeInDirection = TileData.GetAllEdgeInDirection(tile, direction, GetEdgeById);
                     TileData neighbor = map[y, x];
-                    int before = neighbor.ids.Count;
-                    for (int j = neighbor.ids.Count - 1; j >= 0; j--) {
-                        if (tile.ids.Any(t => CompareTile(t, neighbor.ids[j], direction))) {
-                            continue;
-                        } else {
-                            neighbor.ids.RemoveAt(j);
-                        }
-                    }
-                    if (before != neighbor.ids.Count) {
+                    if (TileData.Filter(allEdgeInDirection, direction, neighbor, GetEdgeById)) {
                         tempStack.Push(neighbor);
                         float newEntropy = CalcEntropy(neighbor);
                         indexdMinHeap.Update(neighbor, newEntropy);
@@ -192,6 +187,10 @@ public class WaveFunctionCollapse : MonoBehaviour {
                 }
             }
         }
+    }
+
+    private string[] GetEdgeById(int id) {
+        return tileTemplateDic[id].edge;
     }
 
     private void CreateSprite(TileData td) {
@@ -225,13 +224,4 @@ public class WaveFunctionCollapse : MonoBehaviour {
         return Util.IsReverseEqual(edgeA, edgeB);
     }
 
-    private bool CompareTile(TileData a, TileData b, int aDirection) {
-        int aId = a.ids[0];
-        int bId = b.ids[0];
-        string edgeA = TileData.GetEdgeByRotateAndDirection(tileTemplateDic[aId].edge, aDirection, a.validRotateTimes[aId][0]);
-        string edgeB = TileData.GetEdgeByRotateAndDirection(tileTemplateDic[bId].edge, (aDirection + 2) % 4, b.validRotateTimes[bId][0]);
-        return Util.IsReverseEqual(edgeA, edgeB);
-    }
-
-    
 }

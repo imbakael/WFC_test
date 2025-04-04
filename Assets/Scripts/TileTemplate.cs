@@ -24,7 +24,7 @@ public class TileData {
     public static Dictionary<int, List<int>> InitValidRotate(List<int> ids) {
         var validRotate = new Dictionary<int, List<int>>();
         for (int i = 0; i < ids.Count; i++) {
-            validRotate[i] = new List<int> { 0, 1, 2, 3 };
+            validRotate[ids[i]] = new List<int> { 0, 1, 2, 3 };
         }
         return validRotate;
     }
@@ -36,7 +36,8 @@ public class TileData {
     /// <param name="direction"></param>
     /// <param name="td"></param>
     /// <param name="GetEdgeById"></param>
-    public void Filter(string[] edges, int direction, TileData td, Func<int, string[]> GetEdgeById) {
+    public static bool Filter(HashSet<string> edges, int direction, TileData td, Func<int, string[]> GetEdgeById) {
+        bool isRemove = false;
         for (int i = td.ids.Count - 1; i >= 0; i--) {
             int curId = td.ids[i];
             string[] curEdge = GetEdgeById(curId);
@@ -45,8 +46,10 @@ public class TileData {
             }
             td.ids.RemoveAt(i);
             td.validRotateTimes.Remove(curId);
+            isRemove = true;
         }
         int reverseDirection = (direction + 2) % 4;
+        List<int> readyRemoveIds = null;
         foreach (var item in td.validRotateTimes) {
             int id = item.Key;
             List<int> validRotate = item.Value;
@@ -58,10 +61,25 @@ public class TileData {
                 }
                 validRotate.RemoveAt(i);
             }
-        }  
+            if (validRotate.Count == 0) {
+                if (readyRemoveIds == null) {
+                    readyRemoveIds = new List<int>();
+                }
+                readyRemoveIds.Add(id);
+                isRemove = true;
+            }
+        }
+        if (readyRemoveIds != null) {
+            for (int i = 0; i < readyRemoveIds.Count; i++) {
+                int id = readyRemoveIds[i];
+                td.validRotateTimes.Remove(id);
+                td.ids.Remove(id);
+            }
+        }
+        return isRemove;
     }
 
-    private bool HasAtLeastOneEdgeFit(string[] curEdge, string targetEdge) {
+    private static bool HasAtLeastOneEdgeFit(string[] curEdge, string targetEdge) {
         return curEdge.Any(t => Util.IsReverseEqual(t, targetEdge));
     }
 
@@ -78,5 +96,19 @@ public class TileData {
             delta += 4;
         }
         return edge[delta];
+    }
+
+    public static HashSet<string> GetAllEdgeInDirection(TileData td, int direction, Func<int, string[]> GetEdgeById) {
+        var edges = new HashSet<string>();
+        for (int i = 0; i < td.ids.Count; i++) {
+            int curId = td.ids[i];
+            string[] edge = GetEdgeById(curId);
+            List<int> rotTimes = td.validRotateTimes[curId];
+            for (int j = 0; j < rotTimes.Count; j++) {
+                int rot = rotTimes[j];
+                edges.Add(GetEdgeByRotateAndDirection(edge, rot, direction));
+            }
+        }
+        return edges;
     }
 }
