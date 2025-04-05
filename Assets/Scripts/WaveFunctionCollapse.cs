@@ -64,8 +64,14 @@ public class WaveFunctionCollapse : MonoBehaviour {
                         minEntropy.ids.RemoveAt(i);
                     }
                 }
-            } else {
+            } else if (minEntropy.ids.Count == 1){
                 rId = minEntropy.ids[0];
+            } else {
+                Debug.Log($"出错坐标 = {minEntropy.x}, {minEntropy.y}");
+                for (int d = 0; d < 4; d++) {
+                    PrintLog(minEntropy, d);
+                }
+                yield break;
             }
             // 从id中随机一个旋转方向
             List<int> vRotate = minEntropy.validRotateTimes[rId];
@@ -82,6 +88,24 @@ public class WaveFunctionCollapse : MonoBehaviour {
             //yield return new WaitForSeconds(0.1f);
         }
         Debug.Log($"全部坍缩！用时：{Time.realtimeSinceStartup - startTime}, modifyCount = {modifyCount}");
+    }
+
+    private void PrintLog(TileData td, int direction) {
+        var directionInfo = new List<string> { "上方", "右方", "下方", "左方" };
+        int x = GetDeltaXByDirection(td.x, direction);
+        int y = GetDeltaYByDirection(td.y, direction);
+        if (IsPosValid(x, y)) {
+            Debug.Log($"{directionInfo[direction]}: {x}, {y}");
+            foreach (var item in map[y, x].validRotateTimes) {
+                int id = item.Key;
+                List<int> rotateTime = item.Value;
+                string sum = "";
+                for (int i = 0; i < rotateTime.Count; i++) {
+                    sum += rotateTime[i];
+                }
+                Debug.Log($"id : {id}, rotate : {sum}");
+            }
+        }
     }
 
     // todo 可改为读取scriptableobject
@@ -163,7 +187,6 @@ public class WaveFunctionCollapse : MonoBehaviour {
             float p = tileTemplateDic[id].p;
             sum += entropyCache[p];
         }
-        
         return sum;
     }
 
@@ -196,7 +219,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
     private void CreateSprite(TileData td) {
         int id = td.ids[0];
         Sprite sprite = sprites.Where(t => t.name == tileTemplateDic[id].image).FirstOrDefault();
-        var go = new GameObject(sprite.name);
+        var go = new GameObject(sprite.name + td.x + "," + td.y);
         go.AddComponent<SpriteRenderer>().sprite = sprite;
         go.transform.position = new Vector3(td.x * 0.5f, td.y * -0.5f, 0);
         go.transform.localEulerAngles = new Vector3(0, 0, td.validRotateTimes[id][0] * -90f);
@@ -212,16 +235,6 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
     private int GetDeltaYByDirection(int originY, int direction) {
         return originY + (direction == 0 ? -1 : direction == 2 ? 1 : 0);
-    }
-
-    private bool CompareTile(int tileId, int otherTileId, int direction) {
-        return CompareTile(tileTemplateDic[tileId], tileTemplateDic[otherTileId], direction);
-    }
-
-    private bool CompareTile(TileTemplate a, TileTemplate b, int direction) {
-        string edgeA = a.edge[direction];
-        string edgeB = b.edge[(direction + 2) % 4];
-        return Util.IsReverseEqual(edgeA, edgeB);
     }
 
 }
