@@ -21,6 +21,24 @@ public class TileData {
     public bool isCollapsed;
     public float entropy;
 
+    private List<int> backupIds;
+    private Dictionary<int, List<int>> backupValidRotateTimes;
+
+    public void BackupState() {
+        backupIds = new List<int>(ids);
+        backupValidRotateTimes = new Dictionary<int, List<int>>();
+        foreach (var item in validRotateTimes) {
+            backupValidRotateTimes[item.Key] = new List<int>(item.Value);
+        }
+    }
+    
+    public void RestoreState() {
+        ids = backupIds;
+        validRotateTimes = backupValidRotateTimes;
+        isCollapsed = false;
+        entropy = WaveFunctionCollapse.Instance.CalcEntropy(this);
+    }
+
     public static Dictionary<int, List<int>> InitValidRotate(List<int> ids) {
         var validRotate = new Dictionary<int, List<int>>();
         for (int i = 0; i < ids.Count; i++) {

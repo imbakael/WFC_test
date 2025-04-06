@@ -6,6 +6,8 @@ using UnityEngine;
 
 public class WaveFunctionCollapse : MonoBehaviour {
 
+    public static WaveFunctionCollapse Instance;
+
     private const float MAX_ENTROPY = 100f;
 
     public int width;
@@ -21,35 +23,24 @@ public class WaveFunctionCollapse : MonoBehaviour {
     private Dictionary<float, float> entropyCache;
     private Stack<TileData> tempStack = new Stack<TileData>();
 
+    private void Awake() {
+        Instance = this;
+    }
+
     // WFC的核心循环是 坍缩 - 传播约束 - 回溯
 
     private IEnumerator Start() {
         InitTileTemplates();
         InitMap();
 
-        int randomX = width / 2;
-        int randomY = height / 2;
-        int randomId = 13;
-        map[randomY, randomX].ids = new List<int> { randomId };
-        map[randomY, randomX].validRotateTimes = new Dictionary<int, List<int>> {
-            { randomId, new List<int> { 0 } }
-        };
-        map[randomY, randomX].entropy = CalcEntropy(map[randomY, randomX]);
-        map[randomY, randomX].isCollapsed = true;
-        TileData curTile = map[randomY, randomX];
-        indexdMinHeap.Remove(curTile);
-
-        CreateSprite(curTile);
-        yield return new WaitForSeconds(0.1f);
-
+        Stack<TileData> backupStack = new Stack<TileData>();
         float startTime = Time.realtimeSinceStartup;
         while (indexdMinHeap.Count > 0) {
-            // 传播约束
-            PropagateConstraint(curTile);
-
             // 坍缩
             TileData minEntropy = indexdMinHeap.ExtractMin();
 
+            //minEntropy.BackupState();
+            //backupStack.Push(minEntropy);
             // 从ids中随机一个id
             int rId;
             if (minEntropy.ids.Count > 1) {
@@ -81,7 +72,9 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
             minEntropy.isCollapsed = true;
             CreateSprite(minEntropy);
-            curTile = minEntropy;
+
+            // 传播约束
+            PropagateConstraint(minEntropy);
             yield return new WaitForSeconds(0.1f);
         }
         Debug.Log($"全部坍缩！用时：{Time.realtimeSinceStartup - startTime}");
@@ -174,7 +167,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
         return ids[0];
     }
 
-    private float CalcEntropy(TileData td) {
+    public float CalcEntropy(TileData td) {
         if (td.ids.Count == tileTemplateDic.Count) {
             return MAX_ENTROPY;
         }
