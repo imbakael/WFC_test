@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor.VersionControl;
 using UnityEngine;
 
 public class WaveFunctionCollapse : MonoBehaviour {
@@ -21,8 +20,6 @@ public class WaveFunctionCollapse : MonoBehaviour {
     // 性能优化
     private Dictionary<float, float> entropyCache;
     private Stack<TileData> tempStack = new Stack<TileData>();
-    // test
-    private int modifyCount = 0;
 
     // WFC的核心循环是 坍缩 - 传播约束 - 回溯
 
@@ -32,7 +29,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
         int randomX = width / 2;
         int randomY = height / 2;
-        int randomId = 15;
+        int randomId = 13;
         map[randomY, randomX].ids = new List<int> { randomId };
         map[randomY, randomX].validRotateTimes = new Dictionary<int, List<int>> {
             { randomId, new List<int> { 0 } }
@@ -85,9 +82,9 @@ public class WaveFunctionCollapse : MonoBehaviour {
             minEntropy.isCollapsed = true;
             CreateSprite(minEntropy);
             curTile = minEntropy;
-            //yield return new WaitForSeconds(0.1f);
+            yield return new WaitForSeconds(0.1f);
         }
-        Debug.Log($"全部坍缩！用时：{Time.realtimeSinceStartup - startTime}, modifyCount = {modifyCount}");
+        Debug.Log($"全部坍缩！用时：{Time.realtimeSinceStartup - startTime}");
     }
 
     private void PrintLog(TileData td, int direction) {
@@ -150,7 +147,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 List<int> defaultIds = tileTemplateDic.Keys.ToList();
-                var t = new TileData {
+                var td = new TileData {
                     x = x,
                     y = y,
                     ids = defaultIds,
@@ -158,8 +155,8 @@ public class WaveFunctionCollapse : MonoBehaviour {
                     isCollapsed = false,
                     entropy = MAX_ENTROPY
                 };
-                map[y, x] = t;
-                indexdMinHeap.Insert(t);
+                map[y, x] = td;
+                indexdMinHeap.Insert(td);
             }
         }
     }
@@ -205,7 +202,6 @@ public class WaveFunctionCollapse : MonoBehaviour {
                         tempStack.Push(neighbor);
                         float newEntropy = CalcEntropy(neighbor);
                         indexdMinHeap.Update(neighbor, newEntropy);
-                        modifyCount++;
                     }
                 }
             }
@@ -219,7 +215,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
     private void CreateSprite(TileData td) {
         int id = td.ids[0];
         Sprite sprite = sprites.Where(t => t.name == tileTemplateDic[id].image).FirstOrDefault();
-        var go = new GameObject(sprite.name + td.x + "," + td.y);
+        var go = new GameObject($"{sprite.name} ({td.x}, {td.y})");
         go.AddComponent<SpriteRenderer>().sprite = sprite;
         go.transform.position = new Vector3(td.x * 0.5f, td.y * -0.5f, 0);
         go.transform.localEulerAngles = new Vector3(0, 0, td.validRotateTimes[id][0] * -90f);

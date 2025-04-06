@@ -66,7 +66,6 @@ public class TileData {
                     readyRemoveIds = new List<int>();
                 }
                 readyRemoveIds.Add(id);
-                isRemove = true;
             }
         }
         if (readyRemoveIds != null) {
@@ -74,6 +73,7 @@ public class TileData {
                 int id = readyRemoveIds[i];
                 td.validRotateTimes.Remove(id);
                 td.ids.Remove(id);
+                isRemove = true;
             }
         }
         return isRemove;
