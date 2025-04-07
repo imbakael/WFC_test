@@ -36,11 +36,11 @@ public class WaveFunctionCollapse : MonoBehaviour {
         Stack<TileData> backupStack = new Stack<TileData>();
         float startTime = Time.realtimeSinceStartup;
         while (indexdMinHeap.Count > 0) {
+            // 坍缩前记录当前所有瓦片的状态快照
+
             // 坍缩
             TileData minEntropy = indexdMinHeap.ExtractMin();
 
-            //minEntropy.BackupState();
-            //backupStack.Push(minEntropy);
             // 从ids中随机一个id
             int rId;
             if (minEntropy.ids.Count > 1) {
@@ -73,8 +73,9 @@ public class WaveFunctionCollapse : MonoBehaviour {
             minEntropy.isCollapsed = true;
             CreateSprite(minEntropy);
 
-            // 传播约束
+            // 传播约束，如果出现无解情况，则回溯
             PropagateConstraint(minEntropy);
+
             yield return new WaitForSeconds(0.1f);
         }
         Debug.Log($"全部坍缩！用时：{Time.realtimeSinceStartup - startTime}");
@@ -180,7 +181,8 @@ public class WaveFunctionCollapse : MonoBehaviour {
         return sum;
     }
 
-    private void PropagateConstraint(TileData curTile) {
+    private bool PropagateConstraint(TileData curTile) {
+        bool isZero = false;
         tempStack.Push(curTile);
         while (tempStack.Count != 0) {
             TileData tile = tempStack.Pop(); 
@@ -191,7 +193,11 @@ public class WaveFunctionCollapse : MonoBehaviour {
                 if (IsPosValid(x, y) && map[y, x].isCollapsed == false) {
                     HashSet<string> allEdgeInDirection = TileData.GetAllEdgeInDirection(tile, direction, GetEdgeById);
                     TileData neighbor = map[y, x];
-                    if (TileData.Filter(allEdgeInDirection, direction, neighbor, GetEdgeById)) {
+                    if (TileData.Filter(allEdgeInDirection, direction, neighbor, GetEdgeById, out isZero)) {
+                        if (isZero) {
+                            tempStack.Clear();
+                            return true;
+                        }
                         tempStack.Push(neighbor);
                         float newEntropy = CalcEntropy(neighbor);
                         indexdMinHeap.Update(neighbor, newEntropy);
@@ -199,6 +205,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
                 }
             }
         }
+        return false;
     }
 
     private string[] GetEdgeById(int id) {

@@ -54,7 +54,8 @@ public class TileData {
     /// <param name="direction"></param>
     /// <param name="td"></param>
     /// <param name="GetEdgeById"></param>
-    public static bool Filter(HashSet<string> edges, int direction, TileData td, Func<int, string[]> GetEdgeById) {
+    public static bool Filter(HashSet<string> edges, int direction, TileData td, Func<int, string[]> GetEdgeById, out bool isZero) {
+        isZero = false;
         bool isRemove = false;
         for (int i = td.ids.Count - 1; i >= 0; i--) {
             int curId = td.ids[i];
@@ -65,6 +66,9 @@ public class TileData {
             td.ids.RemoveAt(i);
             td.validRotateTimes.Remove(curId);
             isRemove = true;
+            if (td.ids.Count == 0) {
+                isZero = true;
+            }
         }
         int reverseDirection = (direction + 2) % 4;
         List<int> readyRemoveIds = null;
@@ -92,6 +96,9 @@ public class TileData {
                 td.validRotateTimes.Remove(id);
                 td.ids.Remove(id);
                 isRemove = true;
+                if (td.ids.Count == 0) {
+                    isZero = true;
+                }
             }
         }
         return isRemove;
