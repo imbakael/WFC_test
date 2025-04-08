@@ -36,12 +36,10 @@ public class IndexedMinHeap {
         return min;
     }
 
-    public void Update(TileData td, float newEntropy) {
+    public void Update(TileData td, float oldEntropy, float newEntropy) {
         if (!indices.TryGetValue(td, out int index)) {
             throw new KeyNotFoundException("Element not found in heap");
         }
-        float oldEntropy = td.entropy;
-        td.entropy = newEntropy;
         if (newEntropy < oldEntropy) {
             HeapIfUp(index);
         } else if (newEntropy > oldEntropy) {

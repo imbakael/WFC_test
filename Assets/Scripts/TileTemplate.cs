@@ -24,7 +24,7 @@ public class TileData {
     private List<int> backupIds;
     private Dictionary<int, List<int>> backupValidRotateTimes;
 
-    public void BackupState() {
+    public void RestoreState() {
         backupIds = new List<int>(ids);
         backupValidRotateTimes = new Dictionary<int, List<int>>();
         foreach (var item in validRotateTimes) {
@@ -32,11 +32,11 @@ public class TileData {
         }
     }
     
-    public void RestoreState() {
+    public void BackupState(Func<TileData, float> CalcEntropy) {
         ids = backupIds;
         validRotateTimes = backupValidRotateTimes;
         isCollapsed = false;
-        entropy = WaveFunctionCollapse.Instance.CalcEntropy(this);
+        entropy = CalcEntropy(this);
     }
 
     public static Dictionary<int, List<int>> InitValidRotate(List<int> ids) {
@@ -68,6 +68,7 @@ public class TileData {
             isRemove = true;
             if (td.ids.Count == 0) {
                 isZero = true;
+                return true;
             }
         }
         int reverseDirection = (direction + 2) % 4;
@@ -82,6 +83,7 @@ public class TileData {
                     continue;
                 }
                 validRotate.RemoveAt(i);
+                isRemove = true;
             }
             if (validRotate.Count == 0) {
                 if (readyRemoveIds == null) {
@@ -98,6 +100,7 @@ public class TileData {
                 isRemove = true;
                 if (td.ids.Count == 0) {
                     isZero = true;
+                    return true;
                 }
             }
         }

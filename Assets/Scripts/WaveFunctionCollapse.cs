@@ -6,8 +6,6 @@ using UnityEngine;
 
 public class WaveFunctionCollapse : MonoBehaviour {
 
-    public static WaveFunctionCollapse Instance;
-
     private const float MAX_ENTROPY = 100f;
 
     public int width;
@@ -18,14 +16,10 @@ public class WaveFunctionCollapse : MonoBehaviour {
     private TileData[,] map;
     private IndexedMinHeap indexdMinHeap;
     private Dictionary<int, TileTemplate> tileTemplateDic;
+    private GameObject[,] goMap;
 
     // 性能优化
     private Dictionary<float, float> entropyCache;
-    private Stack<TileData> tempStack = new Stack<TileData>();
-
-    private void Awake() {
-        Instance = this;
-    }
 
     // WFC的核心循环是 坍缩 - 传播约束 - 回溯
 
@@ -33,52 +27,67 @@ public class WaveFunctionCollapse : MonoBehaviour {
         InitTileTemplates();
         InitMap();
 
-        Stack<TileData> backupStack = new Stack<TileData>();
         float startTime = Time.realtimeSinceStartup;
         while (indexdMinHeap.Count > 0) {
-            // 坍缩前记录当前所有瓦片的状态快照
 
+            // 记录污染之前的TileData状态
+            var recordBeforeContaminate = new HashSet<TileData>();
             // 坍缩
             TileData minEntropy = indexdMinHeap.ExtractMin();
-
-            // 从ids中随机一个id
-            int rId;
-            if (minEntropy.ids.Count > 1) {
-                rId = GetRandomTile(minEntropy.ids);
-                for (int i = minEntropy.ids.Count - 1; i >= 0; i--) {
-                    int curId = minEntropy.ids[i];
-                    if (curId != rId) {
-                        minEntropy.validRotateTimes.Remove(curId);
-                        minEntropy.ids.RemoveAt(i);
-                    }
-                }
-            } else if (minEntropy.ids.Count == 1){
-                rId = minEntropy.ids[0];
-            } else {
-                Debug.Log($"出错坐标 = {minEntropy.x}, {minEntropy.y}");
-                for (int d = 0; d < 4; d++) {
-                    PrintLog(minEntropy, d);
-                }
-                yield break;
-            }
-            // 从id中随机一个旋转方向
-            List<int> vRotate = minEntropy.validRotateTimes[rId];
-            int randomRotate = vRotate[UnityEngine.Random.Range(0, vRotate.Count)];
-            for (int i = vRotate.Count - 1; i >= 0; i--) {
-                if (vRotate[i] != randomRotate) {
-                    vRotate.RemoveAt(i);
-                }
-            }
-
+            minEntropy.RestoreState();
+            recordBeforeContaminate.Add(minEntropy);
+            RandomIdAndRotateTimes(minEntropy);
             minEntropy.isCollapsed = true;
             CreateSprite(minEntropy);
 
-            // 传播约束，如果出现无解情况，则回溯
-            PropagateConstraint(minEntropy);
+            // 传播约束，如果出现无解情况，则回到此次坍缩污染和传播污染前
+            if (PropagateConstraint(minEntropy, ref recordBeforeContaminate)) {
+                foreach (TileData item in recordBeforeContaminate) {
+                    float oldEntropy = item.entropy;
+                    item.BackupState(CalcEntropy);
+                    if (item == minEntropy) {
+                        indexdMinHeap.Insert(item);
+                    } else {
+                        indexdMinHeap.Update(item, oldEntropy, item.entropy);
+                    }
+                }
+                Destroy(goMap[minEntropy.y, minEntropy.x]);
+            }
 
-            yield return new WaitForSeconds(0.1f);
+            yield return null;
         }
         Debug.Log($"全部坍缩！用时：{Time.realtimeSinceStartup - startTime}");
+    }
+
+    private void RandomIdAndRotateTimes(TileData minEntropy) {
+        // 从ids中随机一个id
+        int rId;
+        if (minEntropy.ids.Count > 1) {
+            rId = GetRandomTile(minEntropy.ids);
+            for (int i = minEntropy.ids.Count - 1; i >= 0; i--) {
+                int curId = minEntropy.ids[i];
+                if (curId != rId) {
+                    minEntropy.validRotateTimes.Remove(curId);
+                    minEntropy.ids.RemoveAt(i);
+                }
+            }
+        } else if (minEntropy.ids.Count == 1) {
+            rId = minEntropy.ids[0];
+        } else {
+            Debug.Log($"出错坐标 = {minEntropy.x}, {minEntropy.y}");
+            for (int d = 0; d < 4; d++) {
+                PrintLog(minEntropy, d);
+            }
+            return;
+        }
+        // 从id中随机一个旋转方向
+        List<int> vRotate = minEntropy.validRotateTimes[rId];
+        int randomRotate = vRotate[UnityEngine.Random.Range(0, vRotate.Count)];
+        for (int i = vRotate.Count - 1; i >= 0; i--) {
+            if (vRotate[i] != randomRotate) {
+                vRotate.RemoveAt(i);
+            }
+        }
     }
 
     private void PrintLog(TileData td, int direction) {
@@ -137,6 +146,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
     private void InitMap() {
         map = new TileData[height, width];
+        goMap = new GameObject[height, width];
         indexdMinHeap = new IndexedMinHeap();
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
@@ -181,8 +191,9 @@ public class WaveFunctionCollapse : MonoBehaviour {
         return sum;
     }
 
-    private bool PropagateConstraint(TileData curTile) {
+    private bool PropagateConstraint(TileData curTile, ref HashSet<TileData> record) {
         bool isZero = false;
+        var tempStack = new Stack<TileData>();
         tempStack.Push(curTile);
         while (tempStack.Count != 0) {
             TileData tile = tempStack.Pop(); 
@@ -193,14 +204,19 @@ public class WaveFunctionCollapse : MonoBehaviour {
                 if (IsPosValid(x, y) && map[y, x].isCollapsed == false) {
                     HashSet<string> allEdgeInDirection = TileData.GetAllEdgeInDirection(tile, direction, GetEdgeById);
                     TileData neighbor = map[y, x];
+                    if (!record.Contains(neighbor)) {
+                        neighbor.RestoreState();
+                    }
+                    
                     if (TileData.Filter(allEdgeInDirection, direction, neighbor, GetEdgeById, out isZero)) {
+                        record.Add(neighbor);
                         if (isZero) {
-                            tempStack.Clear();
                             return true;
                         }
                         tempStack.Push(neighbor);
-                        float newEntropy = CalcEntropy(neighbor);
-                        indexdMinHeap.Update(neighbor, newEntropy);
+                        float oldEntropy = neighbor.entropy;
+                        neighbor.entropy = CalcEntropy(neighbor);
+                        indexdMinHeap.Update(neighbor, oldEntropy, neighbor.entropy);
                     }
                 }
             }
@@ -219,6 +235,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
         go.AddComponent<SpriteRenderer>().sprite = sprite;
         go.transform.position = new Vector3(td.x * 0.5f, td.y * -0.5f, 0);
         go.transform.localEulerAngles = new Vector3(0, 0, td.validRotateTimes[id][0] * -90f);
+        goMap[td.y, td.x] = go;
     }
 
     private bool IsPosValid(int x, int y) {
