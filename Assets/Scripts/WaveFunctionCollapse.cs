@@ -42,6 +42,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
             // 传播约束，如果出现无解情况，则回到此次坍缩污染和传播污染前
             if (PropagateConstraint(minEntropy, ref recordBeforeContaminate)) {
+                Debug.Log($"回溯 minEntropy.pos = {minEntropy.x}, {minEntropy.y}, {minEntropy.ids.Count}, {minEntropy.validRotateTimes[minEntropy.ids[0]].Count}, id = {minEntropy.ids[0]}, rotate = {minEntropy.validRotateTimes[minEntropy.ids[0]][0]}");
                 foreach (TileData item in recordBeforeContaminate) {
                     float oldEntropy = item.entropy;
                     item.BackupState(CalcEntropy);
