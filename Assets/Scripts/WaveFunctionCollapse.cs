@@ -42,22 +42,26 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
             // 传播约束，如果出现无解情况，则回到此次坍缩污染和传播污染前
             if (PropagateConstraint(minEntropy, ref recordBeforeContaminate)) {
-                Debug.Log($"回溯 minEntropy.pos = {minEntropy.x}, {minEntropy.y}, {minEntropy.ids.Count}, {minEntropy.validRotateTimes[minEntropy.ids[0]].Count}, id = {minEntropy.ids[0]}, rotate = {minEntropy.validRotateTimes[minEntropy.ids[0]][0]}");
-                foreach (TileData item in recordBeforeContaminate) {
-                    float oldEntropy = item.entropy;
-                    item.BackupState(CalcEntropy);
-                    if (item == minEntropy) {
-                        indexdMinHeap.Insert(item);
-                    } else {
-                        indexdMinHeap.Update(item, oldEntropy, item.entropy);
-                    }
-                }
-                Destroy(goMap[minEntropy.y, minEntropy.x]);
+                Debug.Log($"{minEntropy.x}, {minEntropy.y}");
+                Restore(recordBeforeContaminate);
             }
 
             yield return null;
         }
         Debug.Log($"全部坍缩！用时：{Time.realtimeSinceStartup - startTime}");
+    }
+
+    private void Restore(HashSet<TileData> data) {
+        foreach (TileData item in data) {
+            float oldEntropy = item.entropy;
+            bool hasCollapsed = item.BackupState(CalcEntropy);
+            if (hasCollapsed) {
+                indexdMinHeap.Insert(item);
+                Destroy(goMap[item.y, item.x]);
+            } else {
+                indexdMinHeap.Update(item, oldEntropy, item.entropy);
+            }
+        }
     }
 
     private void RandomIdAndRotateTimes(TileData minEntropy) {
@@ -72,39 +76,15 @@ public class WaveFunctionCollapse : MonoBehaviour {
                     minEntropy.ids.RemoveAt(i);
                 }
             }
-        } else if (minEntropy.ids.Count == 1) {
-            rId = minEntropy.ids[0];
         } else {
-            Debug.Log($"出错坐标 = {minEntropy.x}, {minEntropy.y}");
-            for (int d = 0; d < 4; d++) {
-                PrintLog(minEntropy, d);
-            }
-            return;
+            rId = minEntropy.ids[0];
         }
         // 从id中随机一个旋转方向
-        List<int> vRotate = minEntropy.validRotateTimes[rId];
+            List<int> vRotate = minEntropy.validRotateTimes[rId];
         int randomRotate = vRotate[UnityEngine.Random.Range(0, vRotate.Count)];
         for (int i = vRotate.Count - 1; i >= 0; i--) {
             if (vRotate[i] != randomRotate) {
                 vRotate.RemoveAt(i);
-            }
-        }
-    }
-
-    private void PrintLog(TileData td, int direction) {
-        var directionInfo = new List<string> { "上方", "右方", "下方", "左方" };
-        int x = GetDeltaXByDirection(td.x, direction);
-        int y = GetDeltaYByDirection(td.y, direction);
-        if (IsPosValid(x, y)) {
-            Debug.Log($"{directionInfo[direction]}: {x}, {y}");
-            foreach (var item in map[y, x].validRotateTimes) {
-                int id = item.Key;
-                List<int> rotateTime = item.Value;
-                string sum = "";
-                for (int i = 0; i < rotateTime.Count; i++) {
-                    sum += rotateTime[i];
-                }
-                Debug.Log($"id : {id}, rotate : {sum}");
             }
         }
     }

@@ -32,11 +32,13 @@ public class TileData {
         }
     }
     
-    public void BackupState(Func<TileData, float> CalcEntropy) {
+    public bool BackupState(Func<TileData, float> CalcEntropy) {
         ids = backupIds;
         validRotateTimes = backupValidRotateTimes;
+        bool hasCollapsed = isCollapsed;
         isCollapsed = false;
         entropy = CalcEntropy(this);
+        return hasCollapsed;
     }
 
     public static Dictionary<int, List<int>> InitValidRotate(List<int> ids) {
