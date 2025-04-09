@@ -134,14 +134,14 @@ public class WaveFunctionCollapse : MonoBehaviour {
             id = 3,
             image = "GB-LandTileset_96",
             weight = 1,
-            edge = new string[] { "AAA", "AAA", "AAB", "BAA" }
+            edge = new string[] { "AAA", "AAA", "AAC", "BAA" }
         };
 
         var 左中 = new TileTemplate {
             id = 4,
             image = "GB-LandTileset_110",
             weight = 1,
-            edge = new string[] { "AAB", "AAA", "BAA", "AAA" }
+            edge = new string[] { "AAB", "AAA", "EAA", "AAA" }
         };
 
         var 中间 = new TileTemplate {
@@ -155,28 +155,28 @@ public class WaveFunctionCollapse : MonoBehaviour {
             id = 6,
             image = "GB-LandTileset_112",
             weight = 1,
-            edge = new string[] { "BAA", "AAA", "AAB", "AAA" }
+            edge = new string[] { "CAA", "AAA", "AAC", "AAA" }
         };
 
         var 左下 = new TileTemplate {
             id = 7,
             image = "GB-LandTileset_126",
             weight = 1,
-            edge = new string[] { "AAB", "BBA", "AAA", "AAA" }
+            edge = new string[] { "AAE", "DDA", "AAA", "AAA" }
         };
 
         var 中下 = new TileTemplate {
             id = 8,
             image = "GB-LandTileset_127",
             weight = 1,
-            edge = new string[] { "AAA", "BBA", "AAA", "ABB" }
+            edge = new string[] { "AAA", "DDA", "AAA", "ADD" }
         };
 
         var 右下 = new TileTemplate {
             id = 9,
             image = "GB-LandTileset_128",
             weight = 1,
-            edge = new string[] { "BAA", "AAA", "AAA", "ABB" }
+            edge = new string[] { "CAA", "AAA", "AAA", "ADD" }
         };
 
         tileTemplateDic[左上.id] = 左上;
