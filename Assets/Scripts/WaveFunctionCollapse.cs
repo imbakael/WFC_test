@@ -10,6 +10,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
     public int width;
     public int height;
+    public float spriteLength = 1f;
 
     [SerializeField] private Sprite[] sprites;
 
@@ -25,13 +26,13 @@ public class WaveFunctionCollapse : MonoBehaviour {
         InitMap();
 
         float startTime = Time.realtimeSinceStartup;
+        var recordBeforeContaminate = new HashSet<TileData>();
         while (indexdMinHeap.Count > 0) {
-
+            recordBeforeContaminate.Clear();
             // 记录污染之前的TileData状态
-            var recordBeforeContaminate = new HashSet<TileData>();
             // 坍缩
             TileData minEntropy = indexdMinHeap.ExtractMin();
-            minEntropy.RestoreState();
+            minEntropy.Record();
             recordBeforeContaminate.Add(minEntropy);
             RandomIdAndRotateTimes(minEntropy);
             minEntropy.isCollapsed = true;
@@ -40,17 +41,18 @@ public class WaveFunctionCollapse : MonoBehaviour {
             // 传播约束，如果出现无解情况，则回到此次坍缩污染和传播污染前
             if (PropagateConstraint(minEntropy, ref recordBeforeContaminate)) {
                 Debug.Log($"{minEntropy.x}, {minEntropy.y}");
-                Restore(recordBeforeContaminate);
+                Backtrack(recordBeforeContaminate);
+                yield return null;
             }
             yield return null;
         }
         Debug.Log($"全部坍缩！用时：{Time.realtimeSinceStartup - startTime}");
     }
 
-    private void Restore(HashSet<TileData> data) {
+    private void Backtrack(HashSet<TileData> data) {
         foreach (TileData item in data) {
             double oldEntropy = item.entropy;
-            bool hasCollapsed = item.BackupState(ShannonEntropy);
+            bool hasCollapsed = item.Backtrack(ShannonEntropy);
             if (hasCollapsed) {
                 indexdMinHeap.Insert(item);
                 Destroy(goMap[item.y, item.x]);
@@ -87,31 +89,107 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
     // todo 可改为读取scriptableobject
     public void InitTileTemplates() {
-        var white = new TileTemplate {
-            id = 12,
-            image = "white",
-            weight = 1d,
+        tileTemplateDic = new Dictionary<int, TileTemplate>();
+
+        //var white = new TileTemplate {
+        //    id = 12,
+        //    image = "white",
+        //    weight = 1,
+        //    edge = new string[] { "AAA", "AAA", "AAA", "AAA" }
+        //};
+
+        //var line = new TileTemplate {
+        //    id = 13,
+        //    image = "line",
+        //    weight = 5,
+        //    edge = new string[] { "ABA", "AAA", "ABA", "AAA" }
+        //};
+
+        //var circle = new TileTemplate {
+        //    id = 15,
+        //    image = "circle",
+        //    weight = 4,
+        //    edge = new string[] { "ABA", "ABA", "AAA", "AAA" }
+        //};
+
+        //tileTemplateDic[white.id] = white;
+        //tileTemplateDic[line.id] = line;
+        //tileTemplateDic[circle.id] = circle;
+
+        var 左上 = new TileTemplate {
+            id = 1,
+            image = "GB-LandTileset_94",
+            weight = 1,
+            edge = new string[] { "AAA", "AAB", "BAA", "AAA"}
+        };
+
+        var 中上 = new TileTemplate {
+            id = 2,
+            image = "GB-LandTileset_95",
+            weight = 1,
+            edge = new string[] { "AAA", "AAB", "AAA", "BAA" }
+        };
+
+        var 右上 = new TileTemplate {
+            id = 3,
+            image = "GB-LandTileset_96",
+            weight = 1,
+            edge = new string[] { "AAA", "AAA", "AAB", "BAA" }
+        };
+
+        var 左中 = new TileTemplate {
+            id = 4,
+            image = "GB-LandTileset_110",
+            weight = 1,
+            edge = new string[] { "AAB", "AAA", "BAA", "AAA" }
+        };
+
+        var 中间 = new TileTemplate {
+            id = 5,
+            image = "GB-LandTileset_111",
+            weight = 1,
             edge = new string[] { "AAA", "AAA", "AAA", "AAA" }
         };
 
-        var line = new TileTemplate {
-            id = 13,
-            image = "line",
-            weight = 2d,
-            edge = new string[] { "ABA", "AAA", "ABA", "AAA" }
+        var 右中 = new TileTemplate {
+            id = 6,
+            image = "GB-LandTileset_112",
+            weight = 1,
+            edge = new string[] { "BAA", "AAA", "AAB", "AAA" }
         };
 
-        var circle = new TileTemplate {
-            id = 15,
-            image = "circle",
-            weight = 3d,
-            edge = new string[] { "ABA", "ABA", "AAA", "AAA" }
+        var 左下 = new TileTemplate {
+            id = 7,
+            image = "GB-LandTileset_126",
+            weight = 1,
+            edge = new string[] { "AAB", "BBA", "AAA", "AAA" }
         };
 
-        tileTemplateDic = new Dictionary<int, TileTemplate>();
-        tileTemplateDic[white.id] = white;
-        tileTemplateDic[line.id] = line;
-        tileTemplateDic[circle.id] = circle;
+        var 中下 = new TileTemplate {
+            id = 8,
+            image = "GB-LandTileset_127",
+            weight = 1,
+            edge = new string[] { "AAA", "BBA", "AAA", "ABB" }
+        };
+
+        var 右下 = new TileTemplate {
+            id = 9,
+            image = "GB-LandTileset_128",
+            weight = 1,
+            edge = new string[] { "BAA", "AAA", "AAA", "ABB" }
+        };
+
+        tileTemplateDic[左上.id] = 左上;
+        tileTemplateDic[中上.id] = 中上;
+        tileTemplateDic[右上.id] = 右上;
+
+        tileTemplateDic[左中.id] = 左中;
+        tileTemplateDic[中间.id] = 中间;
+        tileTemplateDic[右中.id] = 右中;
+
+        tileTemplateDic[左下.id] = 左下;
+        tileTemplateDic[中下.id] = 中下;
+        tileTemplateDic[右下.id] = 右下;
     }
 
     private void InitMap() {
@@ -175,7 +253,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
                     HashSet<string> allEdgeInDirection = TileData.GetAllEdgeInDirection(tile, direction, GetEdgeById);
                     TileData neighbor = map[y, x];
                     if (!record.Contains(neighbor)) {
-                        neighbor.RestoreState();
+                        neighbor.Record();
                     }
                     
                     if (TileData.Filter(allEdgeInDirection, direction, neighbor, GetEdgeById, out isZero)) {
@@ -203,7 +281,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
         Sprite sprite = sprites.Where(t => t.name == tileTemplateDic[id].image).FirstOrDefault();
         var go = new GameObject($"{sprite.name} ({td.x}, {td.y})");
         go.AddComponent<SpriteRenderer>().sprite = sprite;
-        go.transform.position = new Vector3(td.x * 0.5f, td.y * -0.5f, 0);
+        go.transform.position = new Vector3(td.x * spriteLength, td.y * -spriteLength, 0);
         go.transform.localEulerAngles = new Vector3(0, 0, td.validRotateTimes[id][0] * -90f);
         goMap[td.y, td.x] = go;
     }

@@ -375,12 +375,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 288cd2ea9d51d5246947b7f361a2efab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 30
-  height: 20
+  width: 20
+  height: 10
+  spriteLength: 1
   sprites:
-  - {fileID: 21300000, guid: 2b73aaa45f5c4eb45b83382f3af27be4, type: 3}
-  - {fileID: 21300000, guid: a620db7acd2bc7c4184e7be78b106e16, type: 3}
-  - {fileID: 21300000, guid: 61187f0f6d2fd424dbf538d20901f813, type: 3}
+  - {fileID: -547418041, guid: 43b2af4b3144fbc498eb5282c5ec6061, type: 3}
+  - {fileID: 2137093518, guid: 43b2af4b3144fbc498eb5282c5ec6061, type: 3}
+  - {fileID: -272490876, guid: 43b2af4b3144fbc498eb5282c5ec6061, type: 3}
+  - {fileID: -714804720, guid: 43b2af4b3144fbc498eb5282c5ec6061, type: 3}
+  - {fileID: -268904791, guid: 43b2af4b3144fbc498eb5282c5ec6061, type: 3}
+  - {fileID: 1603904676, guid: 43b2af4b3144fbc498eb5282c5ec6061, type: 3}
+  - {fileID: -1260718038, guid: 43b2af4b3144fbc498eb5282c5ec6061, type: 3}
+  - {fileID: 632260933, guid: 43b2af4b3144fbc498eb5282c5ec6061, type: 3}
+  - {fileID: -1279369364, guid: 43b2af4b3144fbc498eb5282c5ec6061, type: 3}
 --- !u!4 &1082174425
 Transform:
   m_ObjectHideFlags: 0

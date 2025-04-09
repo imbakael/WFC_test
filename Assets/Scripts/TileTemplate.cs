@@ -24,7 +24,7 @@ public class TileData {
     private List<int> backupIds;
     private Dictionary<int, List<int>> backupValidRotateTimes;
 
-    public void RestoreState() {
+    public void Record() {
         backupIds = new List<int>(ids);
         backupValidRotateTimes = new Dictionary<int, List<int>>();
         foreach (var item in validRotateTimes) {
@@ -32,7 +32,7 @@ public class TileData {
         }
     }
     
-    public bool BackupState(Func<TileData, double> CalcEntropy) {
+    public bool Backtrack(Func<TileData, double> CalcEntropy) {
         ids = backupIds;
         validRotateTimes = backupValidRotateTimes;
         bool hasCollapsed = isCollapsed;
