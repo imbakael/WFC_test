@@ -7,7 +7,7 @@ using System.Linq;
 public class TileTemplate {
     public int id;
     public string image;
-    public float p; // 此tile的概率，所有tile的p的和等于1
+    public double weight;
     public string[] edge; // 分为上右下左四个方向的插槽slot，比如当前tile右侧插槽是"ABCCCD"，
                           // 需要左侧插槽是"DCCCBA"才能匹配，因为tile会顺时针旋转，所以每条插槽字符串是按顺时 针的方向进行读取
 }
@@ -19,7 +19,7 @@ public class TileData {
     public List<int> ids; // 该Tile的所有id，最终会坍缩成只剩一个id
     public Dictionary<int, List<int>> validRotateTimes; // 每个id对应的可用的旋转数，0表示顺时针旋转0次，最多旋转3次，最终会坍缩成只剩一个旋转数
     public bool isCollapsed;
-    public float entropy;
+    public double entropy;
 
     private List<int> backupIds;
     private Dictionary<int, List<int>> backupValidRotateTimes;
@@ -32,7 +32,7 @@ public class TileData {
         }
     }
     
-    public bool BackupState(Func<TileData, float> CalcEntropy) {
+    public bool BackupState(Func<TileData, double> CalcEntropy) {
         ids = backupIds;
         validRotateTimes = backupValidRotateTimes;
         bool hasCollapsed = isCollapsed;

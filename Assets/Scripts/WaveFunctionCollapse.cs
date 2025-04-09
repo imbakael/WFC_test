@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class WaveFunctionCollapse : MonoBehaviour {
 
-    private const float MAX_ENTROPY = 100f;
+    private const double MAX_ENTROPY = 100f;
 
     public int width;
     public int height;
@@ -17,9 +17,6 @@ public class WaveFunctionCollapse : MonoBehaviour {
     private IndexedMinHeap indexdMinHeap;
     private Dictionary<int, TileTemplate> tileTemplateDic;
     private GameObject[,] goMap;
-
-    // 性能优化
-    private Dictionary<float, float> entropyCache;
 
     // WFC的核心循环是 坍缩 - 传播约束 - 回溯
 
@@ -45,7 +42,6 @@ public class WaveFunctionCollapse : MonoBehaviour {
                 Debug.Log($"{minEntropy.x}, {minEntropy.y}");
                 Restore(recordBeforeContaminate);
             }
-
             yield return null;
         }
         Debug.Log($"全部坍缩！用时：{Time.realtimeSinceStartup - startTime}");
@@ -53,8 +49,8 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
     private void Restore(HashSet<TileData> data) {
         foreach (TileData item in data) {
-            float oldEntropy = item.entropy;
-            bool hasCollapsed = item.BackupState(CalcEntropy);
+            double oldEntropy = item.entropy;
+            bool hasCollapsed = item.BackupState(ShannonEntropy);
             if (hasCollapsed) {
                 indexdMinHeap.Insert(item);
                 Destroy(goMap[item.y, item.x]);
@@ -94,21 +90,21 @@ public class WaveFunctionCollapse : MonoBehaviour {
         var white = new TileTemplate {
             id = 12,
             image = "white",
-            p = 0.2f,
+            weight = 1d,
             edge = new string[] { "AAA", "AAA", "AAA", "AAA" }
         };
 
         var line = new TileTemplate {
             id = 13,
             image = "line",
-            p = 0.3f,
+            weight = 2d,
             edge = new string[] { "ABA", "AAA", "ABA", "AAA" }
         };
 
         var circle = new TileTemplate {
             id = 15,
             image = "circle",
-            p = 0.5f,
+            weight = 3d,
             edge = new string[] { "ABA", "ABA", "AAA", "AAA" }
         };
 
@@ -116,13 +112,6 @@ public class WaveFunctionCollapse : MonoBehaviour {
         tileTemplateDic[white.id] = white;
         tileTemplateDic[line.id] = line;
         tileTemplateDic[circle.id] = circle;
-
-        entropyCache = new Dictionary<float, float>();
-        foreach (TileTemplate tt in tileTemplateDic.Values) {
-            if (!entropyCache.ContainsKey(tt.p)) {
-                entropyCache[tt.p] = -tt.p * Mathf.Log(tt.p, 2);
-            }
-        }
     }
 
     private void InitMap() {
@@ -147,11 +136,11 @@ public class WaveFunctionCollapse : MonoBehaviour {
     }
 
     private int GetRandomTile(List<int> ids) {
-        float random = UnityEngine.Random.Range(0, 1f);
-        float sumP = ids.Sum(t => tileTemplateDic[t].p);
-        float curP = 0f;
+        double sumWeight = ids.Sum(t => tileTemplateDic[t].weight);
+        float random = UnityEngine.Random.Range(0, (float)sumWeight);
+        double curP = 0f;
         for (int i = 0; i < ids.Count; i++) {
-            curP += tileTemplateDic[ids[i]].p / sumP;
+            curP += tileTemplateDic[ids[i]].weight;
             if (random <= curP) {
                 return ids[i];
             }
@@ -159,17 +148,17 @@ public class WaveFunctionCollapse : MonoBehaviour {
         return ids[0];
     }
 
-    public float CalcEntropy(TileData td) {
-        if (td.ids.Count == tileTemplateDic.Count) {
-            return MAX_ENTROPY;
-        }
-        float sum = 0f;
+    private double ShannonEntropy(TileData td) {
+        double sumWeight = 0f;
+        double sumWeightLog = 0f;
         for (int i = 0; i < td.ids.Count; i++) {
             int id = td.ids[i];
-            float p = tileTemplateDic[id].p;
-            sum += entropyCache[p];
+            double curWeight = tileTemplateDic[id].weight;
+            sumWeight += curWeight;
+            int rotateTimes = td.validRotateTimes[id].Count;
+            sumWeightLog += curWeight * Math.Log(curWeight / rotateTimes);
         }
-        return sum;
+        return Math.Log(sumWeight) - (sumWeightLog / sumWeight);
     }
 
     private bool PropagateConstraint(TileData curTile, ref HashSet<TileData> record) {
@@ -195,8 +184,8 @@ public class WaveFunctionCollapse : MonoBehaviour {
                             return true;
                         }
                         tempStack.Push(neighbor);
-                        float oldEntropy = neighbor.entropy;
-                        neighbor.entropy = CalcEntropy(neighbor);
+                        double oldEntropy = neighbor.entropy;
+                        neighbor.entropy = ShannonEntropy(neighbor);
                         indexdMinHeap.Update(neighbor, oldEntropy, neighbor.entropy);
                     }
                 }
