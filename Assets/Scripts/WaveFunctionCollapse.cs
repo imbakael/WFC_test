@@ -44,7 +44,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
                 Backtrack(recordBeforeContaminate);
                 yield return null;
             }
-            yield return null;
+            //yield return null;
         }
         Debug.Log($"全部坍缩！用时：{Time.realtimeSinceStartup - startTime}");
     }
@@ -116,42 +116,106 @@ public class WaveFunctionCollapse : MonoBehaviour {
         //tileTemplateDic[line.id] = line;
         //tileTemplateDic[circle.id] = circle;
 
-        List<TileTemplate> allTile = new List<TileTemplate> {
+        var allTile = new List<TileTemplate> {
             new TileTemplate {
                 id = 0,
                 image = "empty",
                 weight = 1,
-                edge = new string[] { "EE", "EE", "EE", "EE"}
+                edge = new string[] { "EE", "EE", "EE", "EE"},
+                describe = "无"
             },
             new TileTemplate {
                 id = 1,
                 image = "GB-LandTileset_0",
-                weight = 5,
-                edge = new string[] { "AA", "AA", "AA", "AA" }
+                weight = 10,
+                edge = new string[] { "AA", "AA", "AA", "AA" },
+                describe = "全草地"
             },
             new TileTemplate {
                 id = 2,
                 image = "GB-LandTileset_34",
                 weight = 1,
-                edge = new string[] { "AA", "BC", "CD", "AA" }
+                edge = new string[] { "AA", "BE", "EC", "AA" },
+                describe = "↖河草"
             },
             new TileTemplate {
                 id = 3,
                 image = "GB-LandTileset_35",
                 weight = 1,
-                edge = new string[] { "AA", "AA", "EC", "CB" }
+                edge = new string[] { "AA", "AA", "DE", "EB" },
+                describe = "↗河草"
             },
             new TileTemplate {
                 id = 4,
                 image = "GB-LandTileset_47",
                 weight = 1,
-                edge = new string[] { "DC", "CF", "AA", "AA" }
+                edge = new string[] { "CE", "EF", "AA", "AA" },
+                describe = "↙河草"
             },
             new TileTemplate {
                 id = 5,
                 image = "GB-LandTileset_48",
                 weight = 1,
-                edge = new string[] { "CE", "AA", "AA", "FC" }
+                edge = new string[] { "ED", "AA", "AA", "FE" },
+                describe = "↘河草"
+            },
+
+
+            new TileTemplate {
+                id = 6,
+                image = "GB-LandTileset_36",
+                weight = 1,
+                edge = new string[] { "AA", "BE", "EC", "AA" },
+                describe = "↖河草"
+            },
+             new TileTemplate {
+                id = 7,
+                image = "GB-LandTileset_37",
+                weight = 1,
+                edge = new string[] { "AA", "BE", "EE", "EB" },
+                describe = "↑河草"
+            },
+              new TileTemplate {
+                id = 8,
+                image = "GB-LandTileset_38",
+                weight = 1,
+                edge = new string[] { "AA", "AA", "DE", "EB" },
+                describe = "↗河草"
+            },
+               new TileTemplate {
+                id = 9,
+                image = "GB-LandTileset_49",
+                weight = 1,
+                edge = new string[] { "CE", "EE", "EC", "AA" },
+                describe = "←河草"
+            },
+            new TileTemplate {
+                id = 10,
+                image = "GB-LandTileset_50",
+                weight = 1,
+                edge = new string[] { "ED", "AA", "DE", "EE" },
+                describe = "→河草"
+            },
+             new TileTemplate {
+                id = 11,
+                image = "GB-LandTileset_63",
+                weight = 1,
+                edge = new string[] { "CE", "EF", "AA", "AA" },
+                describe = "↙河草"
+            },
+              new TileTemplate {
+                id = 12,
+                image = "GB-LandTileset_64",
+                weight = 1,
+                edge = new string[] { "EE", "EF", "AA", "FE" },
+                describe = "↓河草"
+            },
+               new TileTemplate {
+                id = 13,
+                image = "GB-LandTileset_65",
+                weight = 1,
+                edge = new string[] { "ED", "AA", "AA", "FE" },
+                describe = "↘河草"
             }
         };
 
