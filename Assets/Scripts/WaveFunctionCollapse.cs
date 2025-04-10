@@ -78,7 +78,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
             rId = minEntropy.ids[0];
         }
         // 从id中随机一个旋转方向
-            List<int> vRotate = minEntropy.validRotateTimes[rId];
+        List<int> vRotate = minEntropy.validRotateTimes[rId];
         int randomRotate = vRotate[UnityEngine.Random.Range(0, vRotate.Count)];
         for (int i = vRotate.Count - 1; i >= 0; i--) {
             if (vRotate[i] != randomRotate) {
@@ -89,7 +89,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
     // todo 可改为读取scriptableobject
     public void InitTileTemplates() {
-        tileTemplateDic = new Dictionary<int, TileTemplate>();
+        
 
         //var white = new TileTemplate {
         //    id = 12,
@@ -116,47 +116,49 @@ public class WaveFunctionCollapse : MonoBehaviour {
         //tileTemplateDic[line.id] = line;
         //tileTemplateDic[circle.id] = circle;
 
-        var grass = new TileTemplate {
-            id = 0,
-            image = "GB-LandTileset_0",
-            weight = 5,
-            edge = new string[] { "AA", "AA", "AA", "AA" }
+        List<TileTemplate> allTile = new List<TileTemplate> {
+            new TileTemplate {
+                id = 0,
+                image = "empty",
+                weight = 1,
+                edge = new string[] { "EE", "EE", "EE", "EE"}
+            },
+            new TileTemplate {
+                id = 1,
+                image = "GB-LandTileset_0",
+                weight = 5,
+                edge = new string[] { "AA", "AA", "AA", "AA" }
+            },
+            new TileTemplate {
+                id = 2,
+                image = "GB-LandTileset_34",
+                weight = 1,
+                edge = new string[] { "AA", "BC", "CD", "AA" }
+            },
+            new TileTemplate {
+                id = 3,
+                image = "GB-LandTileset_35",
+                weight = 1,
+                edge = new string[] { "AA", "AA", "EC", "CB" }
+            },
+            new TileTemplate {
+                id = 4,
+                image = "GB-LandTileset_47",
+                weight = 1,
+                edge = new string[] { "DC", "CF", "AA", "AA" }
+            },
+            new TileTemplate {
+                id = 5,
+                image = "GB-LandTileset_48",
+                weight = 1,
+                edge = new string[] { "CE", "AA", "AA", "FC" }
+            }
         };
 
-        var 左上 = new TileTemplate {
-            id = 1,
-            image = "GB-LandTileset_34",
-            weight = 1,
-            edge = new string[] { "AA", "BC", "CD", "AA"}
-        };
-
-        var 右上 = new TileTemplate {
-            id = 2,
-            image = "GB-LandTileset_35",
-            weight = 1,
-            edge = new string[] { "AA", "AA", "EC", "CB" }
-        };
-
-        var 左下 = new TileTemplate {
-            id = 3,
-            image = "GB-LandTileset_47",
-            weight = 1,
-            edge = new string[] { "DC", "CF", "AA", "AA" }
-        };
-
-        var 右下 = new TileTemplate {
-            id = 4,
-            image = "GB-LandTileset_48",
-            weight = 1,
-            edge = new string[] { "CE", "AA", "AA", "FC" }
-        };
-
-        tileTemplateDic[grass.id] = grass;
-        tileTemplateDic[左上.id] = 左上;
-        tileTemplateDic[右上.id] = 右上;
-
-        tileTemplateDic[左下.id] = 左下;
-        tileTemplateDic[右下.id] = 右下;
+        tileTemplateDic = new Dictionary<int, TileTemplate>();
+        foreach (var item in allTile) {
+            tileTemplateDic[item.id] = item;
+        }
     }
 
     private void InitMap() {
@@ -211,7 +213,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
         var tempStack = new Stack<TileData>();
         tempStack.Push(curTile);
         while (tempStack.Count != 0) {
-            TileData tile = tempStack.Pop(); 
+            TileData tile = tempStack.Pop();
             for (int direction = 0; direction < 4; direction++) {
                 int x = GetDeltaXByDirection(tile.x, direction);
                 int y = GetDeltaYByDirection(tile.y, direction);
@@ -222,7 +224,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
                     if (!record.Contains(neighbor)) {
                         neighbor.Record();
                     }
-                    
+
                     if (TileData.Filter(allEdgeInDirection, direction, neighbor, GetEdgeById, out isZero)) {
                         record.Add(neighbor);
                         if (isZero) {
