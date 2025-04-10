@@ -116,79 +116,46 @@ public class WaveFunctionCollapse : MonoBehaviour {
         //tileTemplateDic[line.id] = line;
         //tileTemplateDic[circle.id] = circle;
 
-        var 左上 = new TileTemplate {
-            id = 1,
-            image = "GB-LandTileset_94",
-            weight = 1,
-            edge = new string[] { "AAA", "AAB", "BAA", "AAA"}
+        var grass = new TileTemplate {
+            id = 0,
+            image = "GB-LandTileset_0",
+            weight = 5,
+            edge = new string[] { "AA", "AA", "AA", "AA" }
         };
 
-        var 中上 = new TileTemplate {
-            id = 2,
-            image = "GB-LandTileset_95",
+        var 左上 = new TileTemplate {
+            id = 1,
+            image = "GB-LandTileset_34",
             weight = 1,
-            edge = new string[] { "AAA", "AAB", "AAA", "BAA" }
+            edge = new string[] { "AA", "BC", "CD", "AA"}
         };
 
         var 右上 = new TileTemplate {
-            id = 3,
-            image = "GB-LandTileset_96",
+            id = 2,
+            image = "GB-LandTileset_35",
             weight = 1,
-            edge = new string[] { "AAA", "AAA", "AAC", "BAA" }
-        };
-
-        var 左中 = new TileTemplate {
-            id = 4,
-            image = "GB-LandTileset_110",
-            weight = 1,
-            edge = new string[] { "AAB", "AAA", "EAA", "AAA" }
-        };
-
-        var 中间 = new TileTemplate {
-            id = 5,
-            image = "GB-LandTileset_111",
-            weight = 1,
-            edge = new string[] { "AAA", "AAA", "AAA", "AAA" }
-        };
-
-        var 右中 = new TileTemplate {
-            id = 6,
-            image = "GB-LandTileset_112",
-            weight = 1,
-            edge = new string[] { "CAA", "AAA", "AAC", "AAA" }
+            edge = new string[] { "AA", "AA", "EC", "CB" }
         };
 
         var 左下 = new TileTemplate {
-            id = 7,
-            image = "GB-LandTileset_126",
+            id = 3,
+            image = "GB-LandTileset_47",
             weight = 1,
-            edge = new string[] { "AAE", "DDA", "AAA", "AAA" }
-        };
-
-        var 中下 = new TileTemplate {
-            id = 8,
-            image = "GB-LandTileset_127",
-            weight = 1,
-            edge = new string[] { "AAA", "DDA", "AAA", "ADD" }
+            edge = new string[] { "DC", "CF", "AA", "AA" }
         };
 
         var 右下 = new TileTemplate {
-            id = 9,
-            image = "GB-LandTileset_128",
+            id = 4,
+            image = "GB-LandTileset_48",
             weight = 1,
-            edge = new string[] { "CAA", "AAA", "AAA", "ADD" }
+            edge = new string[] { "CE", "AA", "AA", "FC" }
         };
 
+        tileTemplateDic[grass.id] = grass;
         tileTemplateDic[左上.id] = 左上;
-        tileTemplateDic[中上.id] = 中上;
         tileTemplateDic[右上.id] = 右上;
 
-        tileTemplateDic[左中.id] = 左中;
-        tileTemplateDic[中间.id] = 中间;
-        tileTemplateDic[右中.id] = 右中;
-
         tileTemplateDic[左下.id] = 左下;
-        tileTemplateDic[中下.id] = 中下;
         tileTemplateDic[右下.id] = 右下;
     }
 
