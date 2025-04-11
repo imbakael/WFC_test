@@ -15,8 +15,7 @@ MonoBehaviour:
   id: 0
   describe: "\u7A7ATile"
   sprite: {fileID: 21300000, guid: aa930e003dbc70e4b9532316847e1419, type: 3}
-  image: 
-  weight: 1
+  weight: 100
   edge:
   - EE
   - EE

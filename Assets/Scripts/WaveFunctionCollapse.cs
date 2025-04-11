@@ -44,7 +44,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
                 Backtrack(recordBeforeContaminate);
                 yield return null;
             }
-            //yield return null;
+            yield return null;
         }
         Debug.Log($"全部坍缩！用时：{Time.realtimeSinceStartup - startTime}");
     }
@@ -87,7 +87,6 @@ public class WaveFunctionCollapse : MonoBehaviour {
         }
     }
 
-    // todo 可改为读取scriptableobject
     public void InitTileTemplates() {
         tileTemplateDic = new Dictionary<int, TileTemplate>();
         foreach (var item in allTile) {
