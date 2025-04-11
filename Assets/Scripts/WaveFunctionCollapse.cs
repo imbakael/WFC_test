@@ -12,7 +12,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
     public int height;
     public float spriteLength = 1f;
 
-    [SerializeField] private Sprite[] sprites;
+    public TileTemplate[] allTile;
 
     private TileData[,] map;
     private IndexedMinHeap indexdMinHeap;
@@ -89,136 +89,6 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
     // todo 可改为读取scriptableobject
     public void InitTileTemplates() {
-        
-
-        //var white = new TileTemplate {
-        //    id = 12,
-        //    image = "white",
-        //    weight = 1,
-        //    edge = new string[] { "AAA", "AAA", "AAA", "AAA" }
-        //};
-
-        //var line = new TileTemplate {
-        //    id = 13,
-        //    image = "line",
-        //    weight = 5,
-        //    edge = new string[] { "ABA", "AAA", "ABA", "AAA" }
-        //};
-
-        //var circle = new TileTemplate {
-        //    id = 15,
-        //    image = "circle",
-        //    weight = 4,
-        //    edge = new string[] { "ABA", "ABA", "AAA", "AAA" }
-        //};
-
-        //tileTemplateDic[white.id] = white;
-        //tileTemplateDic[line.id] = line;
-        //tileTemplateDic[circle.id] = circle;
-
-        var allTile = new List<TileTemplate> {
-            new TileTemplate {
-                id = 0,
-                image = "empty",
-                weight = 1,
-                edge = new string[] { "EE", "EE", "EE", "EE"},
-                describe = "无"
-            },
-            new TileTemplate {
-                id = 1,
-                image = "GB-LandTileset_0",
-                weight = 10,
-                edge = new string[] { "AA", "AA", "AA", "AA" },
-                describe = "全草地"
-            },
-            new TileTemplate {
-                id = 2,
-                image = "GB-LandTileset_34",
-                weight = 1,
-                edge = new string[] { "AA", "BE", "EC", "AA" },
-                describe = "↖河草"
-            },
-            new TileTemplate {
-                id = 3,
-                image = "GB-LandTileset_35",
-                weight = 1,
-                edge = new string[] { "AA", "AA", "DE", "EB" },
-                describe = "↗河草"
-            },
-            new TileTemplate {
-                id = 4,
-                image = "GB-LandTileset_47",
-                weight = 1,
-                edge = new string[] { "CE", "EF", "AA", "AA" },
-                describe = "↙河草"
-            },
-            new TileTemplate {
-                id = 5,
-                image = "GB-LandTileset_48",
-                weight = 1,
-                edge = new string[] { "ED", "AA", "AA", "FE" },
-                describe = "↘河草"
-            },
-
-
-            new TileTemplate {
-                id = 6,
-                image = "GB-LandTileset_36",
-                weight = 1,
-                edge = new string[] { "AA", "BE", "EC", "AA" },
-                describe = "↖河草"
-            },
-             new TileTemplate {
-                id = 7,
-                image = "GB-LandTileset_37",
-                weight = 1,
-                edge = new string[] { "AA", "BE", "EE", "EB" },
-                describe = "↑河草"
-            },
-              new TileTemplate {
-                id = 8,
-                image = "GB-LandTileset_38",
-                weight = 1,
-                edge = new string[] { "AA", "AA", "DE", "EB" },
-                describe = "↗河草"
-            },
-               new TileTemplate {
-                id = 9,
-                image = "GB-LandTileset_49",
-                weight = 1,
-                edge = new string[] { "CE", "EE", "EC", "AA" },
-                describe = "←河草"
-            },
-            new TileTemplate {
-                id = 10,
-                image = "GB-LandTileset_50",
-                weight = 1,
-                edge = new string[] { "ED", "AA", "DE", "EE" },
-                describe = "→河草"
-            },
-             new TileTemplate {
-                id = 11,
-                image = "GB-LandTileset_63",
-                weight = 1,
-                edge = new string[] { "CE", "EF", "AA", "AA" },
-                describe = "↙河草"
-            },
-              new TileTemplate {
-                id = 12,
-                image = "GB-LandTileset_64",
-                weight = 1,
-                edge = new string[] { "EE", "EF", "AA", "FE" },
-                describe = "↓河草"
-            },
-               new TileTemplate {
-                id = 13,
-                image = "GB-LandTileset_65",
-                weight = 1,
-                edge = new string[] { "ED", "AA", "AA", "FE" },
-                describe = "↘河草"
-            }
-        };
-
         tileTemplateDic = new Dictionary<int, TileTemplate>();
         foreach (var item in allTile) {
             tileTemplateDic[item.id] = item;
@@ -311,8 +181,8 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
     private void CreateSprite(TileData td) {
         int id = td.ids[0];
-        Sprite sprite = sprites.Where(t => t.name == tileTemplateDic[id].image).FirstOrDefault();
-        var go = new GameObject($"{sprite.name} ({td.x}, {td.y})");
+        Sprite sprite = tileTemplateDic[id].sprite;
+        var go = new GameObject($"{tileTemplateDic[id].describe} : ({td.x}, {td.y})");
         go.AddComponent<SpriteRenderer>().sprite = sprite;
         go.transform.position = new Vector3(td.x * spriteLength, td.y * -spriteLength, 0);
         go.transform.localEulerAngles = new Vector3(0, 0, td.validRotateTimes[id][0] * -90f);
@@ -320,7 +190,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
     }
 
     private bool IsPosValid(int x, int y) {
-        return x >= 0 && x < map.GetLength(1) && y >= 0 && y < map.GetLength(0);
+        return x >= 0 && x < width && y >= 0 && y < height;
     }
 
     private int GetDeltaXByDirection(int originX, int direction) {
