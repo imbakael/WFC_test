@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 49ec1d9e61287ad4e8cfac78a1230e7a, type: 3}
-  m_Name: 50
+  m_Name: TileTemplate_33
   m_EditorClassIdentifier: 
-  id: 50
-  describe: "\u2192\u6CB3\u8349"
-  sprite: {fileID: 783744240, guid: 43b2af4b3144fbc498eb5282c5ec6061, type: 3}
+  id: 33
+  describe: "\u2197\u5706\u89D2"
+  sprite: {fileID: 62857540, guid: 43b2af4b3144fbc498eb5282c5ec6061, type: 3}
   weight: 1
   edge:
-  - ED
-  - AA
-  - DE
   - EE
+  - EE
+  - EC
+  - FE

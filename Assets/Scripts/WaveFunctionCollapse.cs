@@ -13,6 +13,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
     public float spriteLength = 1f;
 
     public TileTemplate[] allTile;
+    public bool useRotate = true;
 
     private TileData[,] map;
     private IndexedMinHeap indexdMinHeap;
@@ -105,7 +106,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
                     x = x,
                     y = y,
                     ids = defaultIds,
-                    validRotateTimes = TileData.InitValidRotate(defaultIds),
+                    validRotateTimes = TileData.InitValidRotate(defaultIds, useRotate),
                     isCollapsed = false,
                     entropy = MAX_ENTROPY
                 };

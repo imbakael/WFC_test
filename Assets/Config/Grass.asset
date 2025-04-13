@@ -15,9 +15,9 @@ MonoBehaviour:
   id: 1
   describe: "\u7EAF\u8349\u5730"
   sprite: {fileID: 696335166, guid: 43b2af4b3144fbc498eb5282c5ec6061, type: 3}
-  weight: 100
+  weight: 6
   edge:
-  - AA
-  - AA
-  - AA
-  - AA
+  - GG
+  - GG
+  - GG
+  - GG
