@@ -1,39 +1,34 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Security.Policy;
 using UnityEditor;
-using UnityEditor.TerrainTools;
 using UnityEngine;
 
 [CustomEditor(typeof(TileTemplate))]
 public class TileTemplateEditor : Editor {
 
     private TileTemplate tt;
-    private float spriteShowWidth = 256;
-    private float textShowWidth = 100f;
+    private float spriteShowWidth = 128f;
+    private float textShowWidth = 50f;
 
     private string upEdge;
     private string leftEdge;
     private string rightEdge;
     private string downEdge;
 
+    private Sprite upSprite;
+    private Sprite rightSprite;
+    private Sprite downSprite;
+    private Sprite leftSprite;
+
     private void OnEnable() {
         tt = (TileTemplate)target;
         if (tt.edge == null) {
             return;
         }
-        if (tt.edge.Length >= 1) {
-            upEdge = tt.edge[0];
-        }
-        if (tt.edge.Length >= 2) {
-            rightEdge = tt.edge[1];
-        }
-        if (tt.edge.Length >= 3) {
-            downEdge = tt.edge[2];
-        }
-        if (tt.edge.Length >= 4) {
-            leftEdge = tt.edge[3];
-        }
+        upEdge = tt.edge[0];
+        rightEdge = tt.edge[1];
+        downEdge = tt.edge[2];
+        leftEdge = tt.edge[3];
     }
 
     public override void OnInspectorGUI() {
@@ -43,7 +38,6 @@ public class TileTemplateEditor : Editor {
         }
         var texture = AssetPreview.GetAssetPreview(tt.sprite);
         if (texture == null) {
-            Debug.Log("2 tt.sprite.name = " + tt.sprite.name);
             return;
         }
 
@@ -51,8 +45,22 @@ public class TileTemplateEditor : Editor {
         var textureRect = new Rect(EditorGUIUtility.currentViewWidth / 2 - spriteShowWidth / 2, 300, spriteShowWidth, spriteShowWidth);
         GUI.DrawTexture(textureRect, texture);
 
-        GUIStyle style = new GUIStyle(GUI.skin.textField);
-        style.alignment = TextAnchor.MiddleCenter;
+        if (upSprite != null) {
+            DrawTextureByDirection(upSprite, 0);
+        }
+        if (rightSprite != null) {
+            DrawTextureByDirection(rightSprite, 1);
+        }
+        if (downSprite != null) {
+            DrawTextureByDirection(downSprite, 2);
+        }
+        if (leftSprite != null) {
+            DrawTextureByDirection(leftSprite, 3);
+        }
+
+        var style = new GUIStyle(GUI.skin.textField) {
+            alignment = TextAnchor.MiddleCenter
+        };
 
         EditorGUILayout.BeginHorizontal();
         GUILayout.Space(EditorGUIUtility.currentViewWidth / 2 - textShowWidth / 2);
@@ -90,7 +98,30 @@ public class TileTemplateEditor : Editor {
         }
         EditorGUILayout.EndHorizontal();
 
-
+        GUILayout.Space(100f);
+        EditorGUILayout.LabelField("¡ü Tile");
+        upSprite = EditorGUILayout.ObjectField(upSprite, typeof(Sprite), true) as Sprite;
+        GUILayout.Space(10f);
+        EditorGUILayout.LabelField("¡ú Tile");
+        rightSprite = EditorGUILayout.ObjectField(rightSprite, typeof(Sprite), true) as Sprite;
+        GUILayout.Space(10f);
+        EditorGUILayout.LabelField("¡ý Tile");
+        downSprite = EditorGUILayout.ObjectField(downSprite, typeof(Sprite), true) as Sprite;
+        GUILayout.Space(10f);
+        EditorGUILayout.LabelField("¡û Tile");
+        leftSprite = EditorGUILayout.ObjectField(leftSprite, typeof(Sprite), true) as Sprite;
     }
 
+    private void DrawTextureByDirection(Sprite target, int direction) {
+        var texture = AssetPreview.GetAssetPreview(target);
+        if (texture != null) {
+            texture.filterMode = FilterMode.Point;
+            var rect =
+                direction == 0 ? new Rect(EditorGUIUtility.currentViewWidth / 2 - spriteShowWidth / 2, 300 - spriteShowWidth, spriteShowWidth, spriteShowWidth) :
+                direction == 1 ? new Rect(EditorGUIUtility.currentViewWidth / 2 - spriteShowWidth / 2 + spriteShowWidth, 300, spriteShowWidth, spriteShowWidth) :
+                direction == 2 ? new Rect(EditorGUIUtility.currentViewWidth / 2 - spriteShowWidth / 2, 300 +spriteShowWidth, spriteShowWidth, spriteShowWidth) :
+                new Rect(EditorGUIUtility.currentViewWidth / 2 - spriteShowWidth / 2 - spriteShowWidth, 300, spriteShowWidth, spriteShowWidth);
+            GUI.DrawTexture(rect, texture);
+        }
+    }
 }
