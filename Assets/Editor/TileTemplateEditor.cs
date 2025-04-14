@@ -15,10 +15,8 @@ public class TileTemplateEditor : Editor {
     private string rightEdge;
     private string downEdge;
 
-    private Sprite upSprite;
-    private Sprite rightSprite;
-    private Sprite downSprite;
-    private Sprite leftSprite;
+    private Sprite[] matchSprites;
+    private TileTemplate[] matchTemplates;
 
     private void OnEnable() {
         tt = (TileTemplate)target;
@@ -29,6 +27,9 @@ public class TileTemplateEditor : Editor {
         rightEdge = tt.edge[1];
         downEdge = tt.edge[2];
         leftEdge = tt.edge[3];
+
+        matchSprites = new Sprite[4];
+        matchTemplates = new TileTemplate[4];
     }
 
     public override void OnInspectorGUI() {
@@ -45,17 +46,12 @@ public class TileTemplateEditor : Editor {
         var textureRect = new Rect(EditorGUIUtility.currentViewWidth / 2 - spriteShowWidth / 2, 300, spriteShowWidth, spriteShowWidth);
         GUI.DrawTexture(textureRect, texture);
 
-        if (upSprite != null) {
-            DrawTextureByDirection(upSprite, 0);
+        for (int i = 0; i < matchSprites.Length; i++) {
+            DrawTextureByDirection(matchSprites[i], i);
         }
-        if (rightSprite != null) {
-            DrawTextureByDirection(rightSprite, 1);
-        }
-        if (downSprite != null) {
-            DrawTextureByDirection(downSprite, 2);
-        }
-        if (leftSprite != null) {
-            DrawTextureByDirection(leftSprite, 3);
+
+        for (int i = 0; i < matchTemplates.Length; i++) {
+            DrawTextureByDirection(matchTemplates[i] == null ? null : matchTemplates[i].sprite, i);
         }
 
         var style = new GUIStyle(GUI.skin.textField) {
@@ -99,20 +95,31 @@ public class TileTemplateEditor : Editor {
         EditorGUILayout.EndHorizontal();
 
         GUILayout.Space(100f);
-        EditorGUILayout.LabelField("¡ü Tile");
-        upSprite = EditorGUILayout.ObjectField(upSprite, typeof(Sprite), true) as Sprite;
-        GUILayout.Space(10f);
-        EditorGUILayout.LabelField("¡ú Tile");
-        rightSprite = EditorGUILayout.ObjectField(rightSprite, typeof(Sprite), true) as Sprite;
-        GUILayout.Space(10f);
-        EditorGUILayout.LabelField("¡ý Tile");
-        downSprite = EditorGUILayout.ObjectField(downSprite, typeof(Sprite), true) as Sprite;
-        GUILayout.Space(10f);
-        EditorGUILayout.LabelField("¡û Tile");
-        leftSprite = EditorGUILayout.ObjectField(leftSprite, typeof(Sprite), true) as Sprite;
+        EditorGUILayout.BeginHorizontal();
+
+        EditorGUILayout.BeginVertical();
+        for (int i = 0; i < matchSprites.Length; i++) {
+            EditorGUILayout.LabelField(i == 0 ? "¡ü" : i == 1 ? "¡ú" : i == 2 ? "¡ý" : "¡û");
+            matchSprites[i] = EditorGUILayout.ObjectField(matchSprites[i], typeof(Sprite), true) as Sprite;
+            GUILayout.Space(10f);
+        }
+        EditorGUILayout.EndVertical();
+
+        EditorGUILayout.BeginVertical();
+        for (int i = 0; i < matchTemplates.Length; i++) {
+            EditorGUILayout.LabelField(i == 0 ? "¡ü" : i == 1 ? "¡ú" : i == 2 ? "¡ý" : "¡û");
+            matchTemplates[i] = EditorGUILayout.ObjectField(matchTemplates[i], typeof(TileTemplate), true) as TileTemplate;
+            GUILayout.Space(10f);
+        }
+        EditorGUILayout.EndVertical();
+
+        EditorGUILayout.EndHorizontal();
     }
 
     private void DrawTextureByDirection(Sprite target, int direction) {
+        if (target == null) {
+            return;
+        }
         var texture = AssetPreview.GetAssetPreview(target);
         if (texture != null) {
             texture.filterMode = FilterMode.Point;
