@@ -11,6 +11,7 @@ public class TileTemplate : ScriptableObject {
     public string describe;
     public Sprite sprite;
     public double weight;
+    [HideInInspector]
     public string[] edge = new string[4]; // 分为上右下左四个方向的插槽slot，比如当前tile右侧插槽是"ABCCCD"，
                           // 需要左侧插槽是"DCCCBA"才能匹配，因为tile会顺时针旋转，所以每条插槽字符串是按顺时 针的方向进行读取
 }

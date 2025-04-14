@@ -8,6 +8,7 @@ public class TileTemplateEditor : Editor {
 
     private TileTemplate tt;
     private float spriteShowWidth = 128f;
+    private float spriteY = 240f;
     private float textShowWidth = 50f;
 
     private string upEdge;
@@ -43,7 +44,7 @@ public class TileTemplateEditor : Editor {
         }
 
         texture.filterMode = FilterMode.Point;
-        var textureRect = new Rect(EditorGUIUtility.currentViewWidth / 2 - spriteShowWidth / 2, 300, spriteShowWidth, spriteShowWidth);
+        var textureRect = new Rect(EditorGUIUtility.currentViewWidth / 2 - spriteShowWidth / 2, spriteY, spriteShowWidth, spriteShowWidth);
         GUI.DrawTexture(textureRect, texture);
 
         for (int i = 0; i < matchSprites.Length; i++) {
@@ -53,6 +54,8 @@ public class TileTemplateEditor : Editor {
         for (int i = 0; i < matchTemplates.Length; i++) {
             DrawTextureByDirection(matchTemplates[i] == null ? null : matchTemplates[i].sprite, i);
         }
+
+        GUILayout.Space(80f);
 
         var style = new GUIStyle(GUI.skin.textField) {
             alignment = TextAnchor.MiddleCenter
@@ -124,10 +127,10 @@ public class TileTemplateEditor : Editor {
         if (texture != null) {
             texture.filterMode = FilterMode.Point;
             var rect =
-                direction == 0 ? new Rect(EditorGUIUtility.currentViewWidth / 2 - spriteShowWidth / 2, 300 - spriteShowWidth, spriteShowWidth, spriteShowWidth) :
-                direction == 1 ? new Rect(EditorGUIUtility.currentViewWidth / 2 - spriteShowWidth / 2 + spriteShowWidth, 300, spriteShowWidth, spriteShowWidth) :
-                direction == 2 ? new Rect(EditorGUIUtility.currentViewWidth / 2 - spriteShowWidth / 2, 300 +spriteShowWidth, spriteShowWidth, spriteShowWidth) :
-                new Rect(EditorGUIUtility.currentViewWidth / 2 - spriteShowWidth / 2 - spriteShowWidth, 300, spriteShowWidth, spriteShowWidth);
+                direction == 0 ? new Rect(EditorGUIUtility.currentViewWidth / 2 - spriteShowWidth / 2, spriteY - spriteShowWidth, spriteShowWidth, spriteShowWidth) :
+                direction == 1 ? new Rect(EditorGUIUtility.currentViewWidth / 2 - spriteShowWidth / 2 + spriteShowWidth, spriteY, spriteShowWidth, spriteShowWidth) :
+                direction == 2 ? new Rect(EditorGUIUtility.currentViewWidth / 2 - spriteShowWidth / 2, spriteY + spriteShowWidth, spriteShowWidth, spriteShowWidth) :
+                new Rect(EditorGUIUtility.currentViewWidth / 2 - spriteShowWidth / 2 - spriteShowWidth, spriteY, spriteShowWidth, spriteShowWidth);
             GUI.DrawTexture(rect, texture);
         }
     }
