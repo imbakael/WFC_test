@@ -130,7 +130,7 @@ public class TileTemplateEditor : Editor {
                 direction == 0 ? new Rect(EditorGUIUtility.currentViewWidth / 2 - spriteShowWidth / 2, spriteY - spriteShowWidth, spriteShowWidth, spriteShowWidth) :
                 direction == 1 ? new Rect(EditorGUIUtility.currentViewWidth / 2 - spriteShowWidth / 2 + spriteShowWidth, spriteY, spriteShowWidth, spriteShowWidth) :
                 direction == 2 ? new Rect(EditorGUIUtility.currentViewWidth / 2 - spriteShowWidth / 2, spriteY + spriteShowWidth, spriteShowWidth, spriteShowWidth) :
-                new Rect(EditorGUIUtility.currentViewWidth / 2 - spriteShowWidth / 2 - spriteShowWidth, spriteY, spriteShowWidth, spriteShowWidth);
+                                 new Rect(EditorGUIUtility.currentViewWidth / 2 - spriteShowWidth / 2 - spriteShowWidth, spriteY, spriteShowWidth, spriteShowWidth);
             GUI.DrawTexture(rect, texture);
         }
     }

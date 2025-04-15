@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 
 public class WaveFunctionCollapse : MonoBehaviour {
@@ -19,10 +20,17 @@ public class WaveFunctionCollapse : MonoBehaviour {
     private IndexedMinHeap indexdMinHeap;
     private Dictionary<int, TileTemplate> tileTemplateDic;
     private GameObject[,] goMap;
+    private TextMeshPro[,] tmpMap;
+
+    private Transform tileParent;
+    private Transform tmpParent;
 
     // WFC的核心循环是 坍缩 - 传播约束 - 回溯
 
     private IEnumerator Start() {
+        tileParent = GameObject.Find("Tiles").transform;
+        tmpParent = GameObject.Find("Tmps").transform;
+
         InitTileTemplates();
         InitMap();
 
@@ -30,24 +38,46 @@ public class WaveFunctionCollapse : MonoBehaviour {
         var recordBeforeContaminate = new HashSet<TileData>();
         while (indexdMinHeap.Count > 0) {
             recordBeforeContaminate.Clear();
-            // 记录污染之前的TileData状态
+            SetAllTmpToWhite();
             // 坍缩
             TileData minEntropy = indexdMinHeap.ExtractMin();
             minEntropy.Record();
             recordBeforeContaminate.Add(minEntropy);
             RandomIdAndRotateTimes(minEntropy);
+
+            minEntropy.entropy = 0;
+            tmpMap[minEntropy.y, minEntropy.x].text = "0";
+            tmpMap[minEntropy.y, minEntropy.x].color = Color.blue;
             minEntropy.isCollapsed = true;
             CreateSprite(minEntropy);
 
             // 传播约束，如果出现无解情况，则回到此次坍缩污染和传播污染前
             if (PropagateConstraint(minEntropy, ref recordBeforeContaminate)) {
-                Debug.Log($"{minEntropy.x}, {minEntropy.y}");
+                Debug.Log($"backtrack to {minEntropy.x}, {minEntropy.y}");
                 Backtrack(recordBeforeContaminate);
                 yield return null;
             }
-            yield return null;
+            //yield return new WaitForSeconds(2f);
+            while (true) {
+                yield return null;
+                if (Input.GetKeyDown(KeyCode.Space)) {
+                    break;
+                }
+            }
+            
         }
         Debug.Log($"全部坍缩！用时：{Time.realtimeSinceStartup - startTime}");
+    }
+
+    private void SetAllTmpToWhite() {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                TextMeshPro tmp = tmpMap[y, x];
+                if (tmp.color != Color.white) {
+                    tmp.color = Color.white;
+                }
+            }
+        }
     }
 
     private void Backtrack(HashSet<TileData> data) {
@@ -98,6 +128,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
     private void InitMap() {
         map = new TileData[height, width];
         goMap = new GameObject[height, width];
+        tmpMap = new TextMeshPro[height, width];
         indexdMinHeap = new IndexedMinHeap();
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
@@ -112,6 +143,16 @@ public class WaveFunctionCollapse : MonoBehaviour {
                 };
                 map[y, x] = td;
                 indexdMinHeap.Insert(td);
+
+                var textGo = new GameObject($"{x}, {y}");
+                TextMeshPro tmp = textGo.AddComponent<TextMeshPro>();
+                textGo.transform.SetParent(tmpParent, false);
+                textGo.transform.localPosition = new Vector3(x * spriteLength, y * -spriteLength, 0);
+                tmp.GetComponent<RectTransform>().sizeDelta = new Vector2(1, 1);
+                tmp.alignment = TextAlignmentOptions.Center;
+                tmp.fontSize = 4;
+                tmp.text = td.entropy == MAX_ENTROPY ? "100" : td.entropy.ToString("f2");
+                tmpMap[y, x] = tmp;
             }
         }
     }
@@ -129,6 +170,8 @@ public class WaveFunctionCollapse : MonoBehaviour {
         return ids[0];
     }
 
+    // 熵值计算，熵越小说明混乱程度越低，确定性越高。例如某个瓦片都有A和B两个瓦片的可能性，但是A只有0,1两种旋转，B有0,1,2三种旋转
+    // 根据公式，因为B的旋转次数更多，所以熵更高，确定性更低
     private double ShannonEntropy(TileData td) {
         double sumWeight = 0f;
         double sumWeightLog = 0f;
@@ -168,6 +211,8 @@ public class WaveFunctionCollapse : MonoBehaviour {
                         double oldEntropy = neighbor.entropy;
                         neighbor.entropy = ShannonEntropy(neighbor);
                         indexdMinHeap.Update(neighbor, oldEntropy, neighbor.entropy);
+                        tmpMap[neighbor.y, neighbor.x].text = neighbor.entropy == MAX_ENTROPY ? "100" : neighbor.entropy.ToString("f2");
+                        tmpMap[neighbor.y, neighbor.x].color = Color.red;
                     }
                 }
             }
@@ -187,6 +232,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
         go.transform.position = new Vector3(td.x * spriteLength, td.y * -spriteLength, 0);
         go.transform.localEulerAngles = new Vector3(0, 0, td.validRotateTimes[id][0] * -90f);
         goMap[td.y, td.x] = go;
+        go.transform.SetParent(tileParent, false);
     }
 
     private bool IsPosValid(int x, int y) {
