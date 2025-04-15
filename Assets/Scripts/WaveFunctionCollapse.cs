@@ -43,26 +43,26 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
             recordBeforeContaminate.Clear();
 
-            // 坍缩
+            // 1.坍缩
             TileData minEntropy = indexdMinHeap.ExtractMin();
             minEntropy.Record();
             recordBeforeContaminate.Add(minEntropy);
             RandomIdAndRotateTimes(minEntropy);
+            minEntropy.isCollapsed = true;
+            CreateSprite(minEntropy);
 
             // 表现
             float beforeEntropy = (float)minEntropy.entropy;
             DOTween.To((t) => {
                 tmpMap[minEntropy.y, minEntropy.x].text = Mathf.Lerp(beforeEntropy, 0f, t).ToString("f2");
-            }, 0, 1f, 3f);
+            }, 0, 1f, 2f);
             tmpMap[minEntropy.y, minEntropy.x].color = Color.blue;
-
             minEntropy.entropy = 0;
-            minEntropy.isCollapsed = true;
-            CreateSprite(minEntropy);
 
-            // 传播约束，如果出现无解情况，则回到此次坍缩污染和传播污染前
+            // 2.传播约束，如果出现无解情况，则回到此次坍缩污染和传播污染前
             if (PropagateConstraint(minEntropy, ref recordBeforeContaminate)) {
                 Debug.Log($"backtrack to {minEntropy.x}, {minEntropy.y}");
+                // 3.回溯
                 Backtrack(recordBeforeContaminate);
                 yield return null;
             }
@@ -78,6 +78,9 @@ public class WaveFunctionCollapse : MonoBehaviour {
         Debug.Log($"全部坍缩！用时：{Time.realtimeSinceStartup - startTime}");
     }
 
+    private void Update() {
+        
+    }
     private void SetAllTmpToWhite() {
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
@@ -221,7 +224,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
                         // 表现
                         DOTween.To((t) => {
                             tmpMap[neighbor.y, neighbor.x].text = Mathf.Lerp((float)oldEntropy, (float)neighbor.entropy, t).ToString("f2");
-                        }, 0, 1f, 3f);
+                        }, 0, 1f, 2f);
                         tmpMap[neighbor.y, neighbor.x].color = Color.red;
                     }
                 }
