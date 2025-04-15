@@ -1,3 +1,4 @@
+using DG.Tweening;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -20,8 +21,9 @@ public class WaveFunctionCollapse : MonoBehaviour {
     private IndexedMinHeap indexdMinHeap;
     private Dictionary<int, TileTemplate> tileTemplateDic;
     private GameObject[,] goMap;
-    private TextMeshPro[,] tmpMap;
 
+    // 表现
+    private TextMeshPro[,] tmpMap;
     private Transform tileParent;
     private Transform tmpParent;
 
@@ -37,17 +39,24 @@ public class WaveFunctionCollapse : MonoBehaviour {
         float startTime = Time.realtimeSinceStartup;
         var recordBeforeContaminate = new HashSet<TileData>();
         while (indexdMinHeap.Count > 0) {
-            recordBeforeContaminate.Clear();
             SetAllTmpToWhite();
+
+            recordBeforeContaminate.Clear();
+
             // 坍缩
             TileData minEntropy = indexdMinHeap.ExtractMin();
             minEntropy.Record();
             recordBeforeContaminate.Add(minEntropy);
             RandomIdAndRotateTimes(minEntropy);
 
-            minEntropy.entropy = 0;
-            tmpMap[minEntropy.y, minEntropy.x].text = "0";
+            // 表现
+            float beforeEntropy = (float)minEntropy.entropy;
+            DOTween.To((t) => {
+                tmpMap[minEntropy.y, minEntropy.x].text = Mathf.Lerp(beforeEntropy, 0f, t).ToString("f2");
+            }, 0, 1f, 3f);
             tmpMap[minEntropy.y, minEntropy.x].color = Color.blue;
+
+            minEntropy.entropy = 0;
             minEntropy.isCollapsed = true;
             CreateSprite(minEntropy);
 
@@ -57,7 +66,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
                 Backtrack(recordBeforeContaminate);
                 yield return null;
             }
-            //yield return new WaitForSeconds(2f);
+
             while (true) {
                 yield return null;
                 if (Input.GetKeyDown(KeyCode.Space)) {
@@ -72,10 +81,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
     private void SetAllTmpToWhite() {
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                TextMeshPro tmp = tmpMap[y, x];
-                if (tmp.color != Color.white) {
-                    tmp.color = Color.white;
-                }
+                tmpMap[y, x].color = map[y, x].isCollapsed ? Color.green : Color.white;
             }
         }
     }
@@ -211,7 +217,11 @@ public class WaveFunctionCollapse : MonoBehaviour {
                         double oldEntropy = neighbor.entropy;
                         neighbor.entropy = ShannonEntropy(neighbor);
                         indexdMinHeap.Update(neighbor, oldEntropy, neighbor.entropy);
-                        tmpMap[neighbor.y, neighbor.x].text = neighbor.entropy == MAX_ENTROPY ? "100" : neighbor.entropy.ToString("f2");
+
+                        // 表现
+                        DOTween.To((t) => {
+                            tmpMap[neighbor.y, neighbor.x].text = Mathf.Lerp((float)oldEntropy, (float)neighbor.entropy, t).ToString("f2");
+                        }, 0, 1f, 3f);
                         tmpMap[neighbor.y, neighbor.x].color = Color.red;
                     }
                 }
