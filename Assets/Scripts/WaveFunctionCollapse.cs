@@ -79,8 +79,31 @@ public class WaveFunctionCollapse : MonoBehaviour {
     }
 
     private void Update() {
-        
+        if (Input.GetMouseButtonUp(0)) {
+            Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            int x = Mathf.RoundToInt(mousePos.x);
+            int y = Mathf.Abs(Mathf.RoundToInt(mousePos.y));
+            if (IsPosValid(x, y)) {
+                Debug.Log($"坐标 ： {x}, {y}");
+                string s_id = "瓦片ids：";
+                TileData td = map[y, x];
+                for (int i = 0; i < td.ids.Count; i++) {
+                    s_id += td.ids[i] + ", ";
+                }
+                Debug.Log(s_id);
+                string rotate_s = "旋转方向：";
+                for (int i = 0; i < td.ids.Count; i++) {
+                    int id = td.ids[i];
+                    List<int> rotates = td.validRotateTimes[id];
+                    for (int j = 0; j < rotates.Count; j++) {
+                        rotate_s += rotates[j] + (j == rotates.Count - 1 ? ", |   " : ", ");
+                    }
+                }
+                Debug.Log(rotate_s);
+            }
+        }
     }
+
     private void SetAllTmpToWhite() {
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {

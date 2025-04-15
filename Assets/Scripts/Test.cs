@@ -6,22 +6,12 @@ using UnityEngine;
 
 public class Test : MonoBehaviour {
 
-    private void Start() {
-        double sumWeight = 0f;
-        double sumWeightLog = 0f;
-        double[] weights = new double[] { 0.2, 0.2 };
-        for (int i = 0; i < weights.Length; i++) {
-            double curWeight = weights[i];
-            sumWeight += curWeight;
-            sumWeightLog += curWeight * Math.Log(curWeight);
-        }
-        Debug.Log(Math.Log(sumWeight) - (sumWeightLog / sumWeight));
-    }
+    public float a;
 
     private void Update() {
-        if (Input.GetKeyDown(KeyCode.J)) {
-            
+        if (Input.GetKeyDown(KeyCode.Space)) {
+            float t1 = Mathf.RoundToInt(a);
+            Debug.Log(t1);
         }
-
     }
 }

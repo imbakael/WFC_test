@@ -705,6 +705,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e979340faba370248b3a5820163e3db3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  a: 0
 --- !u!4 &417175624
 Transform:
   m_ObjectHideFlags: 0
@@ -1286,7 +1287,7 @@ Camera:
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
-  orthographic: 0
+  orthographic: 1
   orthographic size: 5
   m_Depth: -1
   m_CullingMask:
@@ -1311,7 +1312,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalPosition: {x: 4.5, y: -4.5, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1466,19 +1467,19 @@ MonoBehaviour:
   height: 10
   spriteLength: 1
   allTile:
+  - {fileID: 11400000, guid: 5c0e7288b4c98c545af6ef45ceb08198, type: 2}
+  - {fileID: 11400000, guid: e384182e29266204d83b11a8ffc7c273, type: 2}
+  - {fileID: 11400000, guid: 99c0b85c18095e44b86136c36e1777fc, type: 2}
+  - {fileID: 11400000, guid: e27feca25799bff448ebd169c0217d7e, type: 2}
+  - {fileID: 11400000, guid: b867babba78a07c4296f45dec8666911, type: 2}
+  - {fileID: 11400000, guid: 78715af8aec4ae74b928ed23e1c2a9c9, type: 2}
+  - {fileID: 11400000, guid: a47f32cb44b267d40baaefda40389425, type: 2}
+  - {fileID: 11400000, guid: 73be0a4cf8f56db4cac3ecaa1ae0d76c, type: 2}
   - {fileID: 11400000, guid: 3eb267a068c65364889414e69602b48e, type: 2}
   - {fileID: 11400000, guid: 00108341bfc1b874bbd80cf2d6497a46, type: 2}
   - {fileID: 11400000, guid: 988356055c4bf3745a9c2394fa3a911a, type: 2}
   - {fileID: 11400000, guid: b65e3ff22b9683541a7ee6df5a21a0e1, type: 2}
-  - {fileID: 11400000, guid: 5c0e7288b4c98c545af6ef45ceb08198, type: 2}
-  - {fileID: 11400000, guid: e384182e29266204d83b11a8ffc7c273, type: 2}
   - {fileID: 11400000, guid: a8f1a67f7446ced4db347b25dbde644f, type: 2}
-  - {fileID: 11400000, guid: 99c0b85c18095e44b86136c36e1777fc, type: 2}
-  - {fileID: 11400000, guid: e27feca25799bff448ebd169c0217d7e, type: 2}
-  - {fileID: 11400000, guid: a47f32cb44b267d40baaefda40389425, type: 2}
-  - {fileID: 11400000, guid: 73be0a4cf8f56db4cac3ecaa1ae0d76c, type: 2}
-  - {fileID: 11400000, guid: b867babba78a07c4296f45dec8666911, type: 2}
-  - {fileID: 11400000, guid: 78715af8aec4ae74b928ed23e1c2a9c9, type: 2}
   useRotate: 0
 --- !u!4 &1082174425
 Transform:
