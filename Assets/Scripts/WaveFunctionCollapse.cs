@@ -26,6 +26,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
     private TextMeshPro[,] tmpMap;
     private Transform tileParent;
     private Transform tmpParent;
+    [SerializeField] private float tmpDuration = 1f;
 
     // WFC的核心循环是 坍缩 - 传播约束 - 回溯
 
@@ -39,7 +40,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
         float startTime = Time.realtimeSinceStartup;
         var recordBeforeContaminate = new HashSet<TileData>();
         while (indexdMinHeap.Count > 0) {
-            SetAllTmpToWhite();
+            RestTmpColor();
 
             recordBeforeContaminate.Clear();
 
@@ -55,7 +56,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
             float beforeEntropy = (float)minEntropy.entropy;
             DOTween.To((t) => {
                 tmpMap[minEntropy.y, minEntropy.x].text = Mathf.Lerp(beforeEntropy, 0f, t).ToString("f2");
-            }, 0, 1f, 2f);
+            }, 0, 1f, tmpDuration);
             tmpMap[minEntropy.y, minEntropy.x].color = Color.blue;
             minEntropy.entropy = 0;
 
@@ -84,27 +85,14 @@ public class WaveFunctionCollapse : MonoBehaviour {
             int x = Mathf.RoundToInt(mousePos.x);
             int y = Mathf.Abs(Mathf.RoundToInt(mousePos.y));
             if (IsPosValid(x, y)) {
-                Debug.Log($"坐标 ： {x}, {y}");
-                string s_id = "瓦片ids：";
                 TileData td = map[y, x];
-                for (int i = 0; i < td.ids.Count; i++) {
-                    s_id += td.ids[i] + ", ";
-                }
-                Debug.Log(s_id);
-                string rotate_s = "旋转方向：";
-                for (int i = 0; i < td.ids.Count; i++) {
-                    int id = td.ids[i];
-                    List<int> rotates = td.validRotateTimes[id];
-                    for (int j = 0; j < rotates.Count; j++) {
-                        rotate_s += rotates[j] + (j == rotates.Count - 1 ? ", |   " : ", ");
-                    }
-                }
-                Debug.Log(rotate_s);
+                Debug.Log($"坐标 ：({x}, {y}) 瓦片ids：{string.Join(",", td.ids)}");
+                Debug.Log("旋转方向：" + string.Join(" | ", td.ids.Select(id => string.Join(",", td.validRotateTimes[id]))));
             }
         }
     }
 
-    private void SetAllTmpToWhite() {
+    private void RestTmpColor() {
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 tmpMap[y, x].color = map[y, x].isCollapsed ? Color.green : Color.white;
@@ -127,19 +115,16 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
     private void RandomIdAndRotateTimes(TileData minEntropy) {
         // 从ids中随机一个id
-        int rId;
-        if (minEntropy.ids.Count > 1) {
-            rId = GetRandomTile(minEntropy.ids);
-            for (int i = minEntropy.ids.Count - 1; i >= 0; i--) {
-                int curId = minEntropy.ids[i];
-                if (curId != rId) {
-                    minEntropy.validRotateTimes.Remove(curId);
-                    minEntropy.ids.RemoveAt(i);
-                }
+        int rId = minEntropy.ids.Count > 1 ? GetRandomTile(minEntropy.ids) : minEntropy.ids[0];
+
+        for (int i = minEntropy.ids.Count - 1; i >= 0; i--) {
+            int curId = minEntropy.ids[i];
+            if (curId != rId) {
+                minEntropy.validRotateTimes.Remove(curId);
+                minEntropy.ids.RemoveAt(i);
             }
-        } else {
-            rId = minEntropy.ids[0];
         }
+
         // 从id中随机一个旋转方向
         List<int> vRotate = minEntropy.validRotateTimes[rId];
         int randomRotate = vRotate[UnityEngine.Random.Range(0, vRotate.Count)];
@@ -152,7 +137,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
     public void InitTileTemplates() {
         tileTemplateDic = new Dictionary<int, TileTemplate>();
-        foreach (var item in allTile) {
+        foreach (TileTemplate item in allTile) {
             tileTemplateDic[item.id] = item;
         }
     }
@@ -247,7 +232,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
                         // 表现
                         DOTween.To((t) => {
                             tmpMap[neighbor.y, neighbor.x].text = Mathf.Lerp((float)oldEntropy, (float)neighbor.entropy, t).ToString("f2");
-                        }, 0, 1f, 2f);
+                        }, 0, 1f, tmpDuration);
                         tmpMap[neighbor.y, neighbor.x].color = Color.red;
                     }
                 }
@@ -267,8 +252,8 @@ public class WaveFunctionCollapse : MonoBehaviour {
         go.AddComponent<SpriteRenderer>().sprite = sprite;
         go.transform.position = new Vector3(td.x * spriteLength, td.y * -spriteLength, 0);
         go.transform.localEulerAngles = new Vector3(0, 0, td.validRotateTimes[id][0] * -90f);
-        goMap[td.y, td.x] = go;
         go.transform.SetParent(tileParent, false);
+        goMap[td.y, td.x] = go;
     }
 
     private bool IsPosValid(int x, int y) {

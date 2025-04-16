@@ -77,6 +77,7 @@ public class TileData {
                 return true;
             }
         }
+
         int reverseDirection = (direction + 2) % 4;
         List<int> readyRemoveIds = null;
         foreach (var item in td.validRotateTimes) {
