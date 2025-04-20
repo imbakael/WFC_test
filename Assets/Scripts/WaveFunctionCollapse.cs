@@ -28,8 +28,21 @@ public class WaveFunctionCollapse : MonoBehaviour {
     private Transform tmpParent;
     [SerializeField] private float tmpDuration = 1f;
 
-    // WFC的核心循环是 坍缩 - 传播约束 - 回溯
+    private int current_dropdown_id;
 
+    private void OnEnable() {
+        DropdownController.OnCurrentIDChange += ChangeID;
+    }
+
+    private void OnDisable() {
+        DropdownController.OnCurrentIDChange -= ChangeID;
+    }
+
+    private void ChangeID(int id) {
+        current_dropdown_id = id;
+    }
+
+    // WFC的核心循环是 坍缩 - 传播约束 - 回溯
     private IEnumerator Start() {
         tileParent = GameObject.Find("Tiles").transform;
         tmpParent = GameObject.Find("Tmps").transform;
@@ -40,8 +53,15 @@ public class WaveFunctionCollapse : MonoBehaviour {
         float startTime = Time.realtimeSinceStartup;
         var recordBeforeContaminate = new HashSet<TileData>();
         while (indexdMinHeap.Count > 0) {
-            RestTmpColor();
 
+            while (true) {
+                yield return null;
+                if (Input.GetKeyDown(KeyCode.Space)) {
+                    break;
+                }
+            }
+
+            RestTmpColor();
             recordBeforeContaminate.Clear();
 
             // 1.坍缩
@@ -68,19 +88,12 @@ public class WaveFunctionCollapse : MonoBehaviour {
                 yield return null;
             }
 
-            while (true) {
-                yield return null;
-                if (Input.GetKeyDown(KeyCode.Space)) {
-                    break;
-                }
-            }
-            
         }
         Debug.Log($"全部坍缩！用时：{Time.realtimeSinceStartup - startTime}");
     }
 
     private void Update() {
-        if (Input.GetMouseButtonUp(0)) {
+        if (Input.GetMouseButtonUp(1)) {
             Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             int x = Mathf.RoundToInt(mousePos.x);
             int y = Mathf.Abs(Mathf.RoundToInt(mousePos.y));
@@ -88,6 +101,51 @@ public class WaveFunctionCollapse : MonoBehaviour {
                 TileData td = map[y, x];
                 Debug.Log($"坐标 ：({x}, {y}) 瓦片ids：{string.Join(",", td.ids)}");
                 Debug.Log("旋转方向：" + string.Join(" | ", td.ids.Select(id => string.Join(",", td.validRotateTimes[id]))));
+            }
+        }
+        if (Input.GetMouseButtonUp(0)) {
+            Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            int x = Mathf.RoundToInt(mousePos.x);
+            int y = Mathf.Abs(Mathf.RoundToInt(mousePos.y));
+            if (IsPosValid(x, y)) {
+                TileData td = map[y, x];
+
+                if (td.isCollapsed == false) {
+                    int id = current_dropdown_id;
+                    if (td.ids.Contains(id)) {
+                        RestTmpColor();
+                        var recordBeforeContaminate = new HashSet<TileData>();
+                        td.Record();
+                        recordBeforeContaminate.Add(td);
+                        td.ids = new List<int> { id };
+                        td.validRotateTimes = new Dictionary<int, List<int>> {
+                            { id, new List<int> { 0 } }
+                        };
+                        td.isCollapsed = true;
+                        CreateSprite(td);
+                        indexdMinHeap.Remove(td);
+
+                        // 表现
+                        float beforeEntropy = (float)td.entropy;
+                        DOTween.To((t) => {
+                            tmpMap[td.y, td.x].text = Mathf.Lerp(beforeEntropy, 0f, t).ToString("f2");
+                        }, 0, 1f, tmpDuration);
+                        tmpMap[td.y, td.x].color = Color.blue;
+                        td.entropy = 0;
+
+                        if (PropagateConstraint(td, ref recordBeforeContaminate)) {
+                            Debug.Log($"手动回溯 to {td.x}, {td.y}");
+                            // 3.回溯
+                            Backtrack(recordBeforeContaminate);
+                        }
+
+                    } else {
+                        Debug.LogError($"该位置无法坍缩 id = {id} 的 tile");
+                    }
+                } else {
+                    Debug.LogError("该位置瓦片已经坍缩！");
+                }
+                
             }
         }
     }
