@@ -75,7 +75,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
             // 表现
             float beforeEntropy = (float)minEntropy.entropy;
             DOTween.To((t) => {
-                tmpMap[minEntropy.y, minEntropy.x].text = Mathf.Lerp(beforeEntropy, 0f, t).ToString("f2");
+                tmpMap[minEntropy.y, minEntropy.x].text = Mathf.Lerp(beforeEntropy, 0f, t).ToString("f2").Replace(".00", "");
             }, 0, 1f, tmpDuration);
             tmpMap[minEntropy.y, minEntropy.x].color = Color.blue;
             minEntropy.entropy = 0;
@@ -128,7 +128,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
                         // 表现
                         float beforeEntropy = (float)td.entropy;
                         DOTween.To((t) => {
-                            tmpMap[td.y, td.x].text = Mathf.Lerp(beforeEntropy, 0f, t).ToString("f2");
+                            tmpMap[td.y, td.x].text = Mathf.Lerp(beforeEntropy, 0f, t).ToString("f2").Replace(".00", "");
                         }, 0, 1f, tmpDuration);
                         tmpMap[td.y, td.x].color = Color.blue;
                         td.entropy = 0;
@@ -138,7 +138,6 @@ public class WaveFunctionCollapse : MonoBehaviour {
                             // 3.回溯
                             Backtrack(recordBeforeContaminate);
                         }
-
                     } else {
                         Debug.LogError($"该位置无法坍缩 id = {id} 的 tile");
                     }
@@ -226,7 +225,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
                 tmp.GetComponent<RectTransform>().sizeDelta = new Vector2(1, 1);
                 tmp.alignment = TextAlignmentOptions.Center;
                 tmp.fontSize = 4;
-                tmp.text = td.entropy == MAX_ENTROPY ? "100" : td.entropy.ToString("f2");
+                tmp.text = td.entropy.ToString("f2").Replace(".00", "");
                 tmpMap[y, x] = tmp;
             }
         }
@@ -289,7 +288,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
                         // 表现
                         DOTween.To((t) => {
-                            tmpMap[neighbor.y, neighbor.x].text = Mathf.Lerp((float)oldEntropy, (float)neighbor.entropy, t).ToString("f2");
+                            tmpMap[neighbor.y, neighbor.x].text = Mathf.Lerp((float)oldEntropy, (float)neighbor.entropy, t).ToString("f2").Replace(".00", "");
                         }, 0, 1f, tmpDuration);
                         tmpMap[neighbor.y, neighbor.x].color = Color.red;
                     }
