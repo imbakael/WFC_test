@@ -17,6 +17,9 @@ public class WaveFunctionCollapse : MonoBehaviour {
     public TileTemplate[] allTile;
     public bool useRotate = true;
 
+    public int needId = 1;
+    public int needIdCount = 50; // 草地数量要等于50
+
     private TileData[,] map;
     private IndexedMinHeap indexdMinHeap;
     private Dictionary<int, TileTemplate> tileTemplateDic;
