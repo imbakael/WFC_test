@@ -2361,8 +2361,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 288cd2ea9d51d5246947b7f361a2efab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 50
-  height: 50
+  width: 10
+  height: 10
   spriteLength: 1
   allTile:
   - {fileID: 11400000, guid: 5c0e7288b4c98c545af6ef45ceb08198, type: 2}

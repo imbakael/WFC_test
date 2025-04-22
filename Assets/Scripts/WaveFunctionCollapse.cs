@@ -17,7 +17,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
     public TileTemplate[] allTile;
     public bool useRotate = false;
     public bool generateImmediately = true;
-    public bool useTmp = false;
+    public bool useTmp = true;
 
     private TileData[,] map;
     private IndexedMinHeap indexdMinHeap;

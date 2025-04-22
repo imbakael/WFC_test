@@ -14,8 +14,7 @@ public class DropdownController : MonoBehaviour {
 
     private TMP_Dropdown dropdown;
 
-    private IEnumerator Start() {
-        yield return new WaitForSeconds(0.5f);
+    private void Start() {
         dropdown = GetComponentInChildren<TMP_Dropdown>();
         dropdown.ClearOptions();
 
