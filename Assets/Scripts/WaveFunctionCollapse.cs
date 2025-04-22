@@ -15,10 +15,9 @@ public class WaveFunctionCollapse : MonoBehaviour {
     public float spriteLength = 1f;
 
     public TileTemplate[] allTile;
-    public bool useRotate = true;
-
-    public int needId = 1;
-    public int needIdCount = 50; // 草地数量要等于50
+    public bool useRotate = false;
+    public bool generateImmediately = true;
+    public bool useTmp = false;
 
     private TileData[,] map;
     private IndexedMinHeap indexdMinHeap;
@@ -46,25 +45,30 @@ public class WaveFunctionCollapse : MonoBehaviour {
     }
 
     // WFC的核心循环是 坍缩 - 传播约束 - 回溯
-    private IEnumerator Start() {
+    private void Start() {
         tileParent = GameObject.Find("Tiles").transform;
         tmpParent = GameObject.Find("Tmps").transform;
-
         InitTileTemplates();
-        InitMap();
+    }
 
+    private IEnumerator GenerateMap() {
         float startTime = Time.realtimeSinceStartup;
         var recordBeforeContaminate = new HashSet<TileData>();
         while (indexdMinHeap.Count > 0) {
 
-            while (true) {
-                yield return null;
-                if (Input.GetKeyDown(KeyCode.Space)) {
-                    break;
+            if (!generateImmediately) {
+                while (true) {
+                    yield return null;
+                    if (Input.GetKeyDown(KeyCode.Space)) {
+                        break;
+                    }
                 }
             }
 
-            RestTmpColor();
+            if (useTmp) {
+                RestTmpColor();
+            }
+            
             recordBeforeContaminate.Clear();
 
             // 1.坍缩
@@ -76,12 +80,14 @@ public class WaveFunctionCollapse : MonoBehaviour {
             CreateSprite(minEntropy);
 
             // 表现
-            float beforeEntropy = (float)minEntropy.entropy;
-            DOTween.To((t) => {
-                tmpMap[minEntropy.y, minEntropy.x].text = Mathf.Lerp(beforeEntropy, 0f, t).ToString("f2").Replace(".00", "");
-            }, 0, 1f, tmpDuration);
-            tmpMap[minEntropy.y, minEntropy.x].color = Color.blue;
-            minEntropy.entropy = 0;
+            if (useTmp) {
+                float beforeEntropy = (float)minEntropy.entropy;
+                DOTween.To((t) => {
+                    tmpMap[minEntropy.y, minEntropy.x].text = Mathf.Lerp(beforeEntropy, 0f, t).ToString("f2").Replace(".00", "");
+                }, 0, 1f, tmpDuration);
+                tmpMap[minEntropy.y, minEntropy.x].color = Color.blue;
+                minEntropy.entropy = 0;
+            }
 
             // 2.传播约束，如果出现无解情况，则回到此次坍缩污染和传播污染前
             if (PropagateConstraint(minEntropy, ref recordBeforeContaminate)) {
@@ -96,6 +102,16 @@ public class WaveFunctionCollapse : MonoBehaviour {
     }
 
     private void Update() {
+        if (Input.GetKeyDown(KeyCode.J)) {
+            Util.DestroyAllChildren(tileParent);
+            Util.DestroyAllChildren(tmpParent);
+            InitMap();
+            StartCoroutine(GenerateMap());
+        }
+
+        if (map == null) {
+            return;
+        }
         if (Input.GetMouseButtonUp(1)) {
             Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             int x = Mathf.RoundToInt(mousePos.x);
@@ -110,45 +126,61 @@ public class WaveFunctionCollapse : MonoBehaviour {
             Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             int x = Mathf.RoundToInt(mousePos.x);
             int y = Mathf.Abs(Mathf.RoundToInt(mousePos.y));
+            
             if (IsPosValid(x, y)) {
                 TileData td = map[y, x];
-
-                if (td.isCollapsed == false) {
-                    int id = current_dropdown_id;
-                    if (td.ids.Contains(id)) {
-                        RestTmpColor();
-                        var recordBeforeContaminate = new HashSet<TileData>();
-                        td.Record();
-                        recordBeforeContaminate.Add(td);
-                        td.ids = new List<int> { id };
-                        td.validRotateTimes = new Dictionary<int, List<int>> {
+                if (Input.GetKey(KeyCode.LeftAlt)) {
+                    ForceChangeSprite(x, y, current_dropdown_id);
+                } else {
+                    if (td.isCollapsed == false) {
+                        int id = current_dropdown_id;
+                        if (td.ids.Contains(id)) {
+                            if (useTmp) {
+                                RestTmpColor();
+                            }
+                            
+                            var recordBeforeContaminate = new HashSet<TileData>();
+                            td.Record();
+                            recordBeforeContaminate.Add(td);
+                            td.ids = new List<int> { id };
+                            td.validRotateTimes = new Dictionary<int, List<int>> {
                             { id, new List<int> { 0 } }
                         };
-                        td.isCollapsed = true;
-                        CreateSprite(td);
-                        indexdMinHeap.Remove(td);
+                            td.isCollapsed = true;
+                            CreateSprite(td);
+                            indexdMinHeap.Remove(td);
 
-                        // 表现
-                        float beforeEntropy = (float)td.entropy;
-                        DOTween.To((t) => {
-                            tmpMap[td.y, td.x].text = Mathf.Lerp(beforeEntropy, 0f, t).ToString("f2").Replace(".00", "");
-                        }, 0, 1f, tmpDuration);
-                        tmpMap[td.y, td.x].color = Color.blue;
-                        td.entropy = 0;
+                            // 表现
+                            if (useTmp) {
+                                float beforeEntropy = (float)td.entropy;
+                                DOTween.To((t) => {
+                                    tmpMap[td.y, td.x].text = Mathf.Lerp(beforeEntropy, 0f, t).ToString("f2").Replace(".00", "");
+                                }, 0, 1f, tmpDuration);
+                                tmpMap[td.y, td.x].color = Color.blue;
+                            }
+                            
+                            td.entropy = 0;
 
-                        if (PropagateConstraint(td, ref recordBeforeContaminate)) {
-                            Debug.Log($"手动回溯 to {td.x}, {td.y}");
-                            // 3.回溯
-                            Backtrack(recordBeforeContaminate);
+                            if (PropagateConstraint(td, ref recordBeforeContaminate)) {
+                                Debug.Log($"手动回溯 to {td.x}, {td.y}");
+                                // 3.回溯
+                                Backtrack(recordBeforeContaminate);
+                            }
+                        } else {
+                            Debug.LogError($"该位置无法坍缩 id = {id} 的 tile");
                         }
                     } else {
-                        Debug.LogError($"该位置无法坍缩 id = {id} 的 tile");
+                        Debug.LogError("该位置瓦片已经坍缩！");
                     }
-                } else {
-                    Debug.LogError("该位置瓦片已经坍缩！");
                 }
-                
             }
+        }
+    }
+
+    private void ForceChangeSprite(int x, int y, int id) {
+        GameObject go = goMap[y, x];
+        if (go != null) {
+            go.GetComponent<SpriteRenderer>().sprite = tileTemplateDic[id].sprite;
         }
     }
 
@@ -221,15 +253,17 @@ public class WaveFunctionCollapse : MonoBehaviour {
                 map[y, x] = td;
                 indexdMinHeap.Insert(td);
 
-                var textGo = new GameObject($"{x}, {y}");
-                TextMeshPro tmp = textGo.AddComponent<TextMeshPro>();
-                textGo.transform.SetParent(tmpParent, false);
-                textGo.transform.localPosition = new Vector3(x * spriteLength, y * -spriteLength, 0);
-                tmp.GetComponent<RectTransform>().sizeDelta = new Vector2(1, 1);
-                tmp.alignment = TextAlignmentOptions.Center;
-                tmp.fontSize = 4;
-                tmp.text = td.entropy.ToString("f2").Replace(".00", "");
-                tmpMap[y, x] = tmp;
+                if (useTmp) {
+                    var textGo = new GameObject($"{x}, {y}");
+                    TextMeshPro tmp = textGo.AddComponent<TextMeshPro>();
+                    textGo.transform.SetParent(tmpParent, false);
+                    textGo.transform.localPosition = new Vector3(x * spriteLength, y * -spriteLength, 0);
+                    tmp.GetComponent<RectTransform>().sizeDelta = new Vector2(1, 1);
+                    tmp.alignment = TextAlignmentOptions.Center;
+                    tmp.fontSize = 4;
+                    tmp.text = td.entropy.ToString("f2").Replace(".00", "");
+                    tmpMap[y, x] = tmp;
+                }
             }
         }
     }
@@ -289,11 +323,13 @@ public class WaveFunctionCollapse : MonoBehaviour {
                         neighbor.entropy = ShannonEntropy(neighbor);
                         indexdMinHeap.Update(neighbor, oldEntropy, neighbor.entropy);
 
-                        // 表现
-                        DOTween.To((t) => {
-                            tmpMap[neighbor.y, neighbor.x].text = Mathf.Lerp((float)oldEntropy, (float)neighbor.entropy, t).ToString("f2").Replace(".00", "");
-                        }, 0, 1f, tmpDuration);
-                        tmpMap[neighbor.y, neighbor.x].color = Color.red;
+                        if (useTmp) {
+                            // 表现
+                            DOTween.To((t) => {
+                                tmpMap[neighbor.y, neighbor.x].text = Mathf.Lerp((float)oldEntropy, (float)neighbor.entropy, t).ToString("f2").Replace(".00", "");
+                            }, 0, 1f, tmpDuration);
+                            tmpMap[neighbor.y, neighbor.x].color = Color.red;
+                        }
                     }
                 }
             }

@@ -26,4 +26,11 @@ public static class Util {
             (list[i], list[j]) = (list[j], list[i]);
         }
     }
+
+    public static void DestroyAllChildren(Transform parent) {
+        int childCount = parent.childCount;
+        for (int i = childCount - 1; i >= 0; i--) {
+            GameObject.Destroy(parent.GetChild(i).gameObject);
+        }
+    }
 }

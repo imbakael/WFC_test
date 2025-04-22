@@ -7,6 +7,11 @@ public class IndexedMinHeap {
 
     public int Count => heap.Count;
 
+    public void Clear() {
+        heap.Clear();
+        indices.Clear();
+    }
+
     public void Insert(TileData td) {
         heap.Add(td);
         indices[td] = heap.Count - 1;
