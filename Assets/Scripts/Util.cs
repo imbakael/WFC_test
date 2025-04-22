@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public static class Util {
 
@@ -16,5 +17,13 @@ public static class Util {
             }
         }
         return true;
+    }
+
+    public static void FisherYates(this List<int> list) {
+        var random = new System.Random();
+        for (int i = list.Count - 1; i > 0; i--) {
+            int j = random.Next(i + 1);
+            (list[i], list[j]) = (list[j], list[i]);
+        }
     }
 }

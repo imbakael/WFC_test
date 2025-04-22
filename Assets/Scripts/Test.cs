@@ -6,12 +6,18 @@ using UnityEngine;
 
 public class Test : MonoBehaviour {
 
-    public float a;
-
     private void Update() {
         if (Input.GetKeyDown(KeyCode.Space)) {
-            float t1 = Mathf.RoundToInt(a);
-            Debug.Log(t1);
+            var a = Enumerable.Range(0, 100).ToList();
+            a.FisherYates();
+            for (int i = 0; i < a.Count; i++) {
+                Debug.Log(a[i]);
+            }
+
+            List<int> b = a.Take(11).ToList();
+            for (int i = 0; i < b.Count; i++) {
+                Debug.Log("---- " + b[i]);
+            }
         }
     }
 }
