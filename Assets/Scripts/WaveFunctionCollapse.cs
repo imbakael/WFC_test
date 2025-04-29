@@ -51,64 +51,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
         InitTileTemplates();
     }
 
-    private IEnumerator GenerateMap() {
-        float startTime = Time.realtimeSinceStartup;
-        var recordBeforeContaminate = new HashSet<TileData>();
-        while (indexdMinHeap.Count > 0) {
-
-            if (!generateImmediately) {
-                while (true) {
-                    yield return null;
-                    if (Input.GetKeyDown(KeyCode.Space)) {
-                        break;
-                    }
-                }
-            }
-
-            if (useTmp) {
-                RestTmpColor();
-            }
-            
-            recordBeforeContaminate.Clear();
-
-            // 1.坍缩
-            TileData minEntropy = indexdMinHeap.ExtractMin();
-            minEntropy.Record();
-            recordBeforeContaminate.Add(minEntropy);
-            RandomIdAndRotateTimes(minEntropy);
-            minEntropy.isCollapsed = true;
-            CreateSprite(minEntropy);
-
-            // 表现
-            if (useTmp) {
-                float beforeEntropy = (float)minEntropy.entropy;
-                DOTween.To((t) => {
-                    tmpMap[minEntropy.y, minEntropy.x].text = Mathf.Lerp(beforeEntropy, 0f, t).ToString("f2").Replace(".00", "");
-                }, 0, 1f, tmpDuration);
-                tmpMap[minEntropy.y, minEntropy.x].color = Color.blue;
-                minEntropy.entropy = 0;
-            }
-
-            // 2.传播约束，如果出现无解情况，则回到此次坍缩污染和传播污染前
-            if (PropagateConstraint(minEntropy, ref recordBeforeContaminate)) {
-                Debug.Log($"backtrack to {minEntropy.x}, {minEntropy.y}");
-                // 3.回溯
-                Backtrack(recordBeforeContaminate);
-                yield return null;
-            }
-
-        }
-        Debug.Log($"全部坍缩！用时：{Time.realtimeSinceStartup - startTime}");
-    }
-
     private void Update() {
-        if (Input.GetKeyDown(KeyCode.J)) {
-            Util.DestroyAllChildren(tileParent);
-            Util.DestroyAllChildren(tmpParent);
-            InitMap();
-            StartCoroutine(GenerateMap());
-        }
-
         if (map == null) {
             return;
         }
@@ -175,6 +118,62 @@ public class WaveFunctionCollapse : MonoBehaviour {
                 }
             }
         }
+    }
+
+    public void ReGenerateMap() {
+        Util.DestroyAllChildren(tileParent);
+        Util.DestroyAllChildren(tmpParent);
+        InitMap();
+        StartCoroutine(GenerateMap());
+    }
+
+    private IEnumerator GenerateMap() {
+        float startTime = Time.realtimeSinceStartup;
+        var recordBeforeContaminate = new HashSet<TileData>();
+        while (indexdMinHeap.Count > 0) {
+            if (!generateImmediately) {
+                while (true) {
+                    yield return null;
+                    if (Input.GetKeyDown(KeyCode.Space)) {
+                        break;
+                    }
+                }
+            }
+
+            if (useTmp) {
+                RestTmpColor();
+            }
+
+            recordBeforeContaminate.Clear();
+
+            // 1.坍缩
+            TileData minEntropy = indexdMinHeap.ExtractMin();
+            minEntropy.Record();
+            recordBeforeContaminate.Add(minEntropy);
+            RandomIdAndRotateTimes(minEntropy);
+            minEntropy.isCollapsed = true;
+            CreateSprite(minEntropy);
+
+            // 表现
+            if (useTmp) {
+                float beforeEntropy = (float)minEntropy.entropy;
+                DOTween.To((t) => {
+                    tmpMap[minEntropy.y, minEntropy.x].text = Mathf.Lerp(beforeEntropy, 0f, t).ToString("f2").Replace(".00", "");
+                }, 0, 1f, tmpDuration);
+                tmpMap[minEntropy.y, minEntropy.x].color = Color.blue;
+                minEntropy.entropy = 0;
+            }
+
+            // 2.传播约束，如果出现无解情况，则回到此次坍缩污染和传播污染前
+            if (PropagateConstraint(minEntropy, ref recordBeforeContaminate)) {
+                Debug.Log($"backtrack to {minEntropy.x}, {minEntropy.y}");
+                // 3.回溯
+                Backtrack(recordBeforeContaminate);
+                yield return null;
+            }
+
+        }
+        Debug.Log($"全部坍缩！用时：{Time.realtimeSinceStartup - startTime}");
     }
 
     private void ForceChangeSprite(int x, int y, int id) {
