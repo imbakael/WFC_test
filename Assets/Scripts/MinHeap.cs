@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Generic;
 
+/// <summary>
+/// 最小堆
+/// </summary>
+/// <typeparam name="T"></typeparam>
 public class MinHeap<T> where T : IComparable<T> {
     private List<T> heap; // 动态数组存储堆元素
     public int Count => heap.Count; // 堆中元素数量
