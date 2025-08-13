@@ -8,15 +8,36 @@ public class Test : MonoBehaviour {
 
     private void Update() {
         if (Input.GetKeyDown(KeyCode.Space)) {
-            var a = Enumerable.Range(0, 100).ToList();
-            a.FisherYates();
-            for (int i = 0; i < a.Count; i++) {
-                Debug.Log(a[i]);
-            }
+            IndexedMinHeap im = new IndexedMinHeap();
 
-            List<int> b = a.Take(11).ToList();
-            for (int i = 0; i < b.Count; i++) {
-                Debug.Log("---- " + b[i]);
+            TileData[] tileDatas = new TileData[] {
+                new TileData {
+                    entropy = 99999
+                },
+                new TileData {
+                    entropy = 9999
+                },
+                new TileData {
+                    entropy = 999
+                },
+                new TileData {
+                    entropy = 99
+                },
+                new TileData {
+                    entropy = 9
+                }
+            };
+
+            im.Insert(tileDatas[0]);
+            im.Insert(tileDatas[1]);
+            im.Insert(tileDatas[2]);
+            im.Insert(tileDatas[3]);
+            im.Insert(tileDatas[4]);
+
+            //im.Remove(tileDatas[2]);
+
+            for (int i = 0; i < im.heap.Count; i++) {
+                Debug.Log($"{i}, {im.heap[i].entropy}");
             }
         }
     }
