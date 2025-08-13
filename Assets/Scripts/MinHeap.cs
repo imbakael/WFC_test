@@ -23,6 +23,16 @@ public class MinHeap<T> where T : IComparable<T> {
         }
     }
 
+    public void Remove(T item) {
+        int index = heap.IndexOf(item);
+        if (index != -1) {
+            int lastIndex = heap.Count - 1;
+            heap[index] = heap[lastIndex];
+            heap.RemoveAt(lastIndex);
+            HeapifyDown(index);
+        }
+    }
+
     // 移除并返回堆顶（最小元素）
     public T RemoveMin() {
         if (heap.Count == 0)

@@ -20,7 +20,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
     public bool useTmp = true;
 
     private TileData[,] map;
-    private IndexedMinHeap indexdMinHeap;
+    private MinHeap<TileData> indexdMinHeap;
     private Dictionary<int, TileTemplate> tileTemplateDic;
     private GameObject[,] goMap;
 
@@ -147,7 +147,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
             recordBeforeContaminate.Clear();
 
             // 1.Ì®Ëõ
-            TileData minEntropy = indexdMinHeap.ExtractMin();
+            TileData minEntropy = indexdMinHeap.RemoveMin();
             minEntropy.Record();
             recordBeforeContaminate.Add(minEntropy);
             RandomIdAndRotateTimes(minEntropy);
@@ -193,13 +193,12 @@ public class WaveFunctionCollapse : MonoBehaviour {
 
     private void Backtrack(HashSet<TileData> data) {
         foreach (TileData item in data) {
-            double oldEntropy = item.entropy;
             bool hasCollapsed = item.Backtrack(ShannonEntropy);
             if (hasCollapsed) {
                 indexdMinHeap.Insert(item);
                 Destroy(goMap[item.y, item.x]);
             } else {
-                indexdMinHeap.Update(item, oldEntropy, item.entropy);
+                indexdMinHeap.Update(item);
             }
         }
     }
@@ -237,7 +236,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
         map = new TileData[height, width];
         goMap = new GameObject[height, width];
         tmpMap = new TextMeshPro[height, width];
-        indexdMinHeap = new IndexedMinHeap();
+        indexdMinHeap = new MinHeap<TileData>();
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 List<int> defaultIds = tileTemplateDic.Keys.ToList();
@@ -320,7 +319,7 @@ public class WaveFunctionCollapse : MonoBehaviour {
                         tempStack.Push(neighbor);
                         double oldEntropy = neighbor.entropy;
                         neighbor.entropy = ShannonEntropy(neighbor);
-                        indexdMinHeap.Update(neighbor, oldEntropy, neighbor.entropy);
+                        indexdMinHeap.Update(neighbor);
 
                         if (useTmp) {
                             // ±íÏÖ
