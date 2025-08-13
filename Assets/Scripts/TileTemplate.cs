@@ -17,7 +17,7 @@ public class TileTemplate : ScriptableObject {
 }
 
 // Tile的状态数据
-public class TileData {
+public class TileData : IComparable<TileData> {
     public int x;
     public int y;
     public List<int> ids; // 该Tile的所有id，最终会坍缩成只剩一个id
@@ -145,5 +145,12 @@ public class TileData {
             }
         }
         return edges;
+    }
+
+    public int CompareTo(TileData other) {
+        return
+            this.entropy < other.entropy ? -1 :
+            this.entropy == other.entropy ? 0 :
+            1;
     }
 }

@@ -15,6 +15,14 @@ public class MinHeap<T> where T : IComparable<T> {
         HeapifyUp(heap.Count - 1);  // 从新元素位置开始上浮[2,4](@ref)
     }
 
+    public void Update(T item) {
+        int index = heap.IndexOf(item);
+        if (index != -1) {
+            HeapifyUp(index);
+            HeapifyDown(index);
+        }
+    }
+
     // 移除并返回堆顶（最小元素）
     public T RemoveMin() {
         if (heap.Count == 0)
